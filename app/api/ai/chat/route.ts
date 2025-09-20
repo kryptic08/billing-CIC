@@ -112,7 +112,7 @@ User Question: ${message}`;
     console.log('AI API: Sending request to Gemini...');
 
     // Get AI response using Gemini 1.5 Flash
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     const result = await model.generateContent(systemPrompt);
     const response = await result.response;
