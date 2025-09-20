@@ -3,7 +3,6 @@ import { createClient as createBrowserClient } from '@/utils/supabase/client';
 import { createClient as createServerClient, createServiceRoleClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { PaymentRecord, Patient } from '@/lib/types';
-import type { User } from '@supabase/supabase-js';
 
 const safeStringifyError = (err: unknown) => {
   try {
@@ -117,9 +116,8 @@ export const getPaymentRecords = async (): Promise<PaymentRecord[]> => {
   );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export const getPaymentRecordById = async (id: number) => {
-  return runWithRlsRecovery<any>(async (client) =>
+export const getPaymentRecordById = async (id: number): Promise<PaymentRecord> => {
+  return runWithRlsRecovery<PaymentRecord>(async (client) =>
     client
       .from('payment_records')
       .select(`

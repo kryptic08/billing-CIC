@@ -7,6 +7,7 @@ import { User } from "@supabase/supabase-js";
 import LaserFlow from "./LaserFlow";
 import TextInput from "./TextInput";
 import { CloudLightningIcon } from "lucide-react";
+import Image from "next/image";
 
 export function HeroSectionOne({ user }: { user: User | null }) {
   const [showAIModal, setShowAIModal] = React.useState(false);
@@ -186,8 +187,10 @@ export function HeroSectionOne({ user }: { user: User | null }) {
               {/* Always show image - Analytics are for the /admin page */}
               <div className="relative z-10 overflow-hidden rounded-xl border border-gray-300/20 dark:border-gray-700/20 sm:rounded-2xl">
                 <div className="relative group">
-                  <img
+                  <Image
                     src="/background/CloudInCo.png"
+                    width={1600}
+                    height={900}
                     alt="Healthcare management dashboard preview"
                     className="aspect-[16/9] scale-150 h-auto w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     loading="lazy"
