@@ -1,16 +1,30 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
-const geminiApiKey = process.env.NEXT_GEMINI_KEY!;
+// Validate environment variables with better error handling
+const geminiApiKey = process.env.NEXT_GEMINI_KEY || process.env.GOOGLE_AI_API_KEY;
 
 if (!geminiApiKey) {
-  console.error('Missing Google AI API key');
+  console.error('Missing Google AI API key. Please set NEXT_GEMINI_KEY or GOOGLE_AI_API_KEY environment variable.');
 }
 
-const genAI = new GoogleGenerativeAI(geminiApiKey);
+// Only initialize if API key is available
+const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null;
 
 export async function POST(request: NextRequest) {
   try {
+    // Check if AI is properly configured
+    if (!genAI) {
+      console.error('Google AI not initialized - missing API key');
+      return NextResponse.json(
+        { 
+          error: 'AI service is not properly configured', 
+          details: 'Missing Google AI API key in environment variables'
+        },
+        { status: 500 }
+      );
+    }
+
     const { message } = await request.json();
 
     if (!message) {
@@ -22,29 +36,78 @@ export async function POST(request: NextRequest) {
 
     console.log('AI API: Fetching comprehensive billing data...');
     
-    // Fetch all billing data from our dedicated billing data API
-    const billingResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/billing/data`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-
-    if (!billingResponse.ok) {
-      console.error('Failed to fetch billing data:', billingResponse.status);
+    // Build the correct API URL for internal calls
+    const baseUrl = process.env.VERCEL_URL 
+      ? `https://${process.env.VERCEL_URL}` 
+      : process.env.NEXT_PUBLIC_SITE_URL 
+      ? process.env.NEXT_PUBLIC_SITE_URL
+      : 'http://localhost:3000';
+    
+    const billingApiUrl = `${baseUrl}/api/billing/data`;
+    console.log('AI API: Calling billing API at:', billingApiUrl);
+    
+    // Fetch all billing data from our dedicated billing data API with timeout
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    
+    let billingResponse;
+    try {
+      billingResponse = await fetch(billingApiUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        signal: controller.signal,
+      });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      console.error('Failed to fetch billing data:', fetchError);
       return NextResponse.json(
         { 
           error: 'Failed to fetch billing data for AI context', 
-          details: `Billing API returned status ${billingResponse.status}`
+          details: fetchError instanceof Error ? fetchError.message : 'Network error'
+        },
+        { status: 500 }
+      );
+    }
+    
+    clearTimeout(timeoutId);
+
+    if (!billingResponse.ok) {
+      console.error('Failed to fetch billing data:', {
+        status: billingResponse.status,
+        statusText: billingResponse.statusText,
+        url: billingApiUrl
+      });
+      
+      // Try to get error details from response
+      let errorDetails = `Billing API returned status ${billingResponse.status}`;
+      try {
+        const errorResponse = await billingResponse.json();
+        errorDetails = errorResponse.error || errorDetails;
+      } catch {
+        // If we can't parse the error response, use the status
+      }
+      
+      return NextResponse.json(
+        { 
+          error: 'Failed to fetch billing data for AI context', 
+          details: errorDetails
         },
         { status: 500 }
       );
     }
 
     const billingResult = await billingResponse.json();
+    console.log('AI API: Billing data response:', {
+      success: billingResult.success,
+      hasData: !!billingResult.data,
+      dataLength: billingResult.data?.length || 0,
+      hasSummary: !!billingResult.summary
+    });
     
     if (!billingResult.success || !billingResult.data) {
-      console.error('No billing data available');
+      console.error('No billing data available:', billingResult);
       return NextResponse.json({
         error: 'No billing data available in the system',
         details: 'The billing database appears to be empty or inaccessible'
@@ -111,33 +174,59 @@ User Question: ${message}`;
 
     console.log('AI API: Sending request to Gemini...');
 
-    // Get AI response using Gemini 1.5 Flash
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-    
-    const result = await model.generateContent(systemPrompt);
-    const response = await result.response;
-    const aiResponse = response.text();
+    // Get AI response using Gemini 1.5 Flash with error handling
+    try {
+      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      
+      const result = await model.generateContent(systemPrompt);
+      const response = await result.response;
+      const aiResponse = response.text();
 
-    console.log('AI API: Successfully generated response');
-
-    return NextResponse.json({
-      success: true,
-      response: aiResponse,
-      dataContext: {
-        totalRecords: summary.totalRecords,
-        totalPatients: summary.totalPatients,
-        totalRevenue: summary.totalRevenue,
-        totalOutstanding: summary.totalOutstanding,
-        latestDate: summary.latestAdmissionDate
+      if (!aiResponse) {
+        throw new Error('Empty response from Gemini API');
       }
-    });
+
+      console.log('AI API: Successfully generated response of length:', aiResponse.length);
+
+      return NextResponse.json({
+        success: true,
+        response: aiResponse,
+        dataContext: {
+          totalRecords: summary.totalRecords,
+          totalPatients: summary.totalPatients,
+          totalRevenue: summary.totalRevenue,
+          totalOutstanding: summary.totalOutstanding,
+          latestDate: summary.latestAdmissionDate
+        }
+      });
+    } catch (geminiError) {
+      console.error('Gemini API error:', {
+        message: geminiError instanceof Error ? geminiError.message : 'Unknown error',
+        name: geminiError instanceof Error ? geminiError.name : 'Unknown',
+        stack: geminiError instanceof Error ? geminiError.stack : undefined
+      });
+      
+      return NextResponse.json(
+        { 
+          error: 'Failed to generate AI response', 
+          details: geminiError instanceof Error ? geminiError.message : 'Unknown error from AI service'
+        },
+        { status: 500 }
+      );
+    }
 
   } catch (error) {
-    console.error('AI API error:', error);
+    console.error('AI API error:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      name: error instanceof Error ? error.name : 'Unknown',
+      stack: error instanceof Error ? error.stack : undefined,
+      type: typeof error
+    });
+    
     return NextResponse.json(
       { 
-        error: 'Failed to generate AI response', 
-        details: error instanceof Error ? error.message : 'Unknown error'
+        error: 'Failed to process AI request', 
+        details: error instanceof Error ? error.message : 'Unknown error occurred'
       },
       { status: 500 }
     );

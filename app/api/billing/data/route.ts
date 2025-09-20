@@ -5,7 +5,10 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase environment variables');
+  console.error('Missing Supabase environment variables:', {
+    hasUrl: !!supabaseUrl,
+    hasKey: !!supabaseKey
+  });
 }
 
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -34,7 +37,18 @@ interface BillingRecord {
 
 export async function GET() {
   try {
-    console.log('Billing Data API: Fetching all patient records...');
+    // Check if Supabase is properly configured
+    if (!supabaseUrl || !supabaseKey) {
+      return NextResponse.json(
+        { 
+          error: 'Database service is not properly configured', 
+          details: 'Missing Supabase environment variables'
+        },
+        { status: 500 }
+      );
+    }
+
+    console.log('Billing Data API: Fetching all patient records from Supabase...');
     
     // Fetch ALL billing data from Supabase (no limit for complete dataset)
     const { data, error } = await supabase
@@ -43,7 +57,12 @@ export async function GET() {
       .order('AdmissionDate', { ascending: false });
 
     if (error) {
-      console.error('Supabase error:', error);
+      console.error('Supabase error:', {
+        message: error.message,
+        details: error.details,
+        hint: error.hint,
+        code: error.code
+      });
       return NextResponse.json(
         { 
           error: 'Failed to fetch billing data', 
