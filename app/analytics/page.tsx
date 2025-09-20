@@ -3,17 +3,17 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import PaymentsNav from "@/Components/PaymentsNav";
 import { motion } from "motion/react";
 import AnalyticsDashboard from "@/Components/AnalyticsDashboard";
 import Nav from "@/Components/Nav";
 import TextInput from "@/Components/TextInput";
 import { CloudLightningIcon } from "lucide-react";
 import React from "react";
+import type { User } from "@supabase/supabase-js";
 
 export default function AnalyticsPage() {
   const [isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
   const supabase = createClient();
   const [showAIModal, setShowAIModal] = React.useState(false);

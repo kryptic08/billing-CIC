@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { PieChart, BarChart, LineChart } from "@/Components/ui/charts";
-import StatsSection from "@/Components/StatsSection";
+import { PieChart, LineChart } from "@/Components/ui/charts";
 
 interface BillingRecord {
   PatientID: number;

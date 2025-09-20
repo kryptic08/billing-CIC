@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
-import { CloudMoon, HomeIcon, User } from "lucide-react";
+import { CloudMoon, HomeIcon } from "lucide-react";
 
 export default function Auth() {
   const [formData, setFormData] = useState({
@@ -59,7 +59,7 @@ export default function Auth() {
 
   const checkEmailVerification = async () => {
     try {
-      const { data, error } = await supabase.auth.getUser();
+      const { data } = await supabase.auth.getUser();
       if (data?.user?.email_confirmed_at) {
         router.push("/");
       } else {
@@ -120,26 +120,42 @@ export default function Auth() {
           router.push("/"); // Redirect to homepage on successful login
         }
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Auth error details:", error);
       // Provide more detailed error messages
-      let errorMessage = error.message;
+      let errorMessage =
+        error instanceof Error ? error.message : "An error occurred";
 
-      if (error.message?.includes("Invalid login credentials")) {
+      if (
+        error instanceof Error &&
+        error.message?.includes("Invalid login credentials")
+      ) {
         errorMessage =
           "Invalid email or password. Please check your credentials and try again.";
-      } else if (error.message?.includes("Email not confirmed")) {
+      } else if (
+        error instanceof Error &&
+        error.message?.includes("Email not confirmed")
+      ) {
         errorMessage =
           "Please check your email and click the confirmation link before signing in.";
-      } else if (error.message?.includes("User already registered")) {
+      } else if (
+        error instanceof Error &&
+        error.message?.includes("User already registered")
+      ) {
         errorMessage =
           "An account with this email already exists. Please sign in instead.";
-      } else if (error.status === 500) {
+      } else if (
+        error &&
+        typeof error === "object" &&
+        "status" in error &&
+        error.status === 500
+      ) {
         errorMessage =
           "Database error: Please ensure the database is properly set up with all required tables and triggers. Check the console for more details.";
       } else if (
-        error.message?.includes("Database error") ||
-        error.message?.includes("trigger")
+        error instanceof Error &&
+        (error.message?.includes("Database error") ||
+          error.message?.includes("trigger"))
       ) {
         errorMessage =
           "Database setup issue detected. Please run the complete database schema to fix missing tables.";
@@ -186,7 +202,9 @@ export default function Auth() {
               </svg>
             </div>
             <h2 className="text-3xl font-bold text-white">Check Your Email</h2>
-            <p className="text-gray-300">We've sent a verification link to</p>
+            <p className="text-gray-300">
+              We&apos;ve sent a verification link to
+            </p>
             <p className="text-blue-400 font-medium break-all">{userEmail}</p>
           </div>
 
@@ -211,7 +229,7 @@ export default function Auth() {
               onClick={checkEmailVerification}
               className="w-full flex items-center justify-center py-3 px-4 border border-gray-600 text-sm font-medium rounded-lg text-white bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
             >
-              I've verified my email
+              I&apos;ve verified my email
             </button>
 
             {/* Error Message */}
@@ -501,7 +519,7 @@ export default function Auth() {
             >
               {isSignUp
                 ? "Already have an account? Sign In"
-                : "Don't have an account? Sign Up"}
+                : "Don&apos;t have an account? Sign Up"}
             </button>
           </div>
         </form>

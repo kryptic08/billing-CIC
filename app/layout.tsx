@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
-import { Bitcount_Grid_Double, Roboto } from "next/font/google";
+import { Inter_Tight, Roboto } from "next/font/google";
 import "./globals.css";
 
-const bitcountGridDouble = Bitcount_Grid_Double({
-  variable: "--font-bitcount-grid-double",
+const interTight = Inter_Tight({
+  variable: "--font-inter-tight",
   subsets: ["latin"],
 });
 
@@ -27,9 +27,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body
-        className={`${bitcountGridDouble.variable} ${roboto.variable} antialiased`}
-      >
+      <body className={`${interTight.variable} ${roboto.variable} antialiased`}>
         {children}
       </body>
     </html>

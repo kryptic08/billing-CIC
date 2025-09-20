@@ -4,9 +4,7 @@ import { HeroSectionOne } from "@/Components/Showcase Hero";
 import { Footer } from "@/Components/Footer";
 import { createClient } from "@/utils/supabase/server";
 import { cookies } from "next/headers";
-import AnalyticsDashboard from "@/Components/AnalyticsDashboard";
 import React from "react";
-import { motion } from "framer-motion";
 import StatsSection from "@/Components/StatsSection";
 
 export default async function Home() {

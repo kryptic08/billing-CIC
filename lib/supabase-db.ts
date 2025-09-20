@@ -3,8 +3,9 @@ import { createClient as createBrowserClient } from '@/utils/supabase/client';
 import { createClient as createServerClient, createServiceRoleClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { PaymentRecord, Patient } from '@/lib/types';
+import type { User } from '@supabase/supabase-js';
 
-const safeStringifyError = (err: any) => {
+const safeStringifyError = (err: unknown) => {
   try {
     if (!err) return String(err);
     if (err instanceof Error) return err.message;
@@ -65,6 +66,7 @@ const createServerSupabase = async () => {
   return createServerClient(cookieStore);
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const runWithRlsRecovery = async <T>(queryFn: (client: any) => Promise<{ data: T; error: any }>): Promise<T> => {
   const serverClient = await createServerSupabase();
   const { data, error } = await queryFn(serverClient);
@@ -115,6 +117,7 @@ export const getPaymentRecords = async (): Promise<PaymentRecord[]> => {
   );
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getPaymentRecordById = async (id: number) => {
   return runWithRlsRecovery<any>(async (client) =>
     client
@@ -134,6 +137,7 @@ export const getPaymentRecordById = async (id: number) => {
 };
 
 export const updatePaymentRecord = async (id: number, updates: Partial<PaymentRecord>) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return runWithRlsRecovery<any>(async (client) =>
     client
       .from('payment_records')
@@ -145,6 +149,7 @@ export const updatePaymentRecord = async (id: number, updates: Partial<PaymentRe
 };
 
 export const deletePaymentRecord = async (id: number) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return runWithRlsRecovery<any>(async (client) =>
     client
       .from('payment_records')
@@ -155,6 +160,7 @@ export const deletePaymentRecord = async (id: number) => {
 };
 
 export const isUserAdmin = async (userId: string) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   return runWithRlsRecovery<any>(async (client) => client.from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').single())
     .then((res) => !!res)
     .catch((err) => {
@@ -164,6 +170,7 @@ export const isUserAdmin = async (userId: string) => {
 };
 
 // Client-side admin helper
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const isUserAdminClient = async (userId: string, currentUser?: any) => {
   const supabase = createBrowserClient();
 
@@ -178,13 +185,14 @@ export const isUserAdminClient = async (userId: string, currentUser?: any) => {
   }
 
   const { data, error } = await supabase.from('user_roles').select('role').eq('user_id', userId).eq('role', 'admin').single();
-  if (error && (error as any).code !== 'PGRST116') {
+  if (error && typeof error === 'object' && error !== null && 'code' in error && error.code !== 'PGRST116') {
     console.error('isUserAdminClient error:', safeStringifyError(error));
     return false;
   }
   return !!data;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const grantAdminPrivilegesClient = async (userId: string, currentUser?: any) => {
   const supabase = createBrowserClient();
 
@@ -233,6 +241,7 @@ export const grantAdminPrivilegesClient = async (userId: string, currentUser?: a
   return data;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const revokeAdminPrivilegesClient = async (userId: string, currentUser?: any) => {
   const supabase = createBrowserClient();
 
@@ -274,6 +283,7 @@ export const revokeAdminPrivilegesClient = async (userId: string, currentUser?: 
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getAllUsersClient = async (currentUser?: any) => {
   const supabase = createBrowserClient();
 
@@ -324,6 +334,7 @@ export const getAllUsersClient = async (currentUser?: any) => {
   return data;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const getAllPaymentRecordsClient = async (currentUser?: any) => {
   const supabase = createBrowserClient();
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useLayoutEffect, useRef, useState } from "react";
+import React, { useLayoutEffect, useRef, useState, useCallback } from "react";
 import { gsap } from "gsap";
 // use your own icon import if react-icons is not available
 import { GoArrowUpRight } from "react-icons/go";
@@ -65,7 +65,8 @@ const CardNav: React.FC<CardNavProps> = ({
         contentEl.style.position = "static";
         contentEl.style.height = "auto";
 
-        contentEl.offsetHeight;
+        // Trigger layout calculation
+        void contentEl.offsetHeight;
 
         const topBar = 60;
         const padding = 16;
@@ -82,7 +83,7 @@ const CardNav: React.FC<CardNavProps> = ({
     return 260;
   };
 
-  const createTimeline = () => {
+  const createTimeline = useCallback(() => {
     const navEl = navRef.current;
     if (!navEl) return null;
 
@@ -104,7 +105,7 @@ const CardNav: React.FC<CardNavProps> = ({
     );
 
     return tl;
-  };
+  }, [ease]);
 
   useLayoutEffect(() => {
     const tl = createTimeline();
@@ -114,7 +115,7 @@ const CardNav: React.FC<CardNavProps> = ({
       tl?.kill();
       tlRef.current = null;
     };
-  }, [ease, items]);
+  }, [createTimeline, items]);
 
   useLayoutEffect(() => {
     const handleResize = () => {
@@ -141,7 +142,7 @@ const CardNav: React.FC<CardNavProps> = ({
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [isExpanded]);
+  }, [isExpanded, createTimeline]);
 
   const toggleMenu = () => {
     const tl = tlRef.current;
@@ -200,7 +201,7 @@ const CardNav: React.FC<CardNavProps> = ({
           </div>
 
           <button
-            onClick={(e) => (window.location.href = "/")}
+            onClick={() => (window.location.href = "/")}
             type="button"
             className="card-nav-cta-button hidden md:inline-flex flex-row border-0 rounded-[calc(0.75rem-0.2rem)] px-4 h-full w-[95px] font-medium cursor-pointer transition-colors duration-300"
             style={{ backgroundColor: buttonBgColor, color: buttonTextColor }}

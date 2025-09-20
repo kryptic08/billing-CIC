@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import { Globe, Paperclip, Plus, Send } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { Textarea } from "@/components/ui/Textarea";
+import { Textarea } from "@/Components/ui/Textarea";
 
 interface UseAutoResizeTextareaProps {
   minHeight: number;
@@ -84,7 +84,7 @@ export function AiInput() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handelClose = (e: any) => {
+  const handelClose = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
     if (fileInputRef.current) {
@@ -93,7 +93,7 @@ export function AiInput() {
     setImagePreview(null); // Use null instead of empty string
   };
 
-  const handelChange = (e: any) => {
+  const handelChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files ? e.target.files[0] : null;
     if (file) {
       setImagePreview(URL.createObjectURL(file));

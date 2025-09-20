@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
@@ -32,7 +32,7 @@ interface BillingRecord {
   PaymentStatus: string;
 }
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     console.log('Billing Data API: Fetching all patient records...');
     

@@ -53,7 +53,7 @@ const useAutoResizeTextarea = ({
 
 const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
   ({ minHeight = 48, maxHeight = 164, className, ...props }, ref) => {
-    const { textareaRef, adjustHeight } = useAutoResizeTextarea({
+    const { textareaRef } = useAutoResizeTextarea({
       minHeight,
       maxHeight,
     });

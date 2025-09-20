@@ -1,7 +1,6 @@
 "use client";
 import React from "react";
 import { motion } from "motion/react";
-import { Heart, Shield, Clock, Users } from "lucide-react";
 
 export function Footer() {
   const footerSections = [
@@ -14,29 +13,6 @@ export function Footer() {
         { label: "Appointment", href: "/departmemts/appointment" },
         { label: "Billing", href: "/" },
       ],
-    },
-  ];
-
-  const features = [
-    {
-      icon: Heart,
-      title: "Compassionate Care",
-      description: "Providing healthcare with heart and understanding",
-    },
-    {
-      icon: Shield,
-      title: "HIPAA Compliant",
-      description: "Your health data is secure and protected",
-    },
-    {
-      icon: Clock,
-      title: "24/7 Support",
-      description: "Round-the-clock medical assistance",
-    },
-    {
-      icon: Users,
-      title: "Expert Team",
-      description: "Certified healthcare professionals",
     },
   ];
 
@@ -62,7 +38,7 @@ export function Footer() {
           viewport={{ once: true }}
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mb-8 sm:mb-12"
         >
-          {footerSections.map((section, index) => (
+          {footerSections.map((section) => (
             <div key={section.title}>
               <h3 className="lg:text-left text-center sm:text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3 sm:mb-4">
                 {section.title}

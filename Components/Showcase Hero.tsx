@@ -4,10 +4,9 @@ import React from "react";
 import { motion } from "motion/react";
 import { TextShimmer } from "./TextShimmer";
 import { User } from "@supabase/supabase-js";
-import { DataVisualization } from "./ui/charts/DataVisualization";
 import LaserFlow from "./LaserFlow";
 import TextInput from "./TextInput";
-import { BrainIcon, CloudLightningIcon } from "lucide-react";
+import { CloudLightningIcon } from "lucide-react";
 
 export function HeroSectionOne({ user }: { user: User | null }) {
   const [showAIModal, setShowAIModal] = React.useState(false);
@@ -26,12 +25,9 @@ export function HeroSectionOne({ user }: { user: User | null }) {
   };
 
   const firstName = getFirstName(user);
-  const headingText = user
-    ? `Welcome Back, ${firstName}!`
-    : "Cloud Inc. Co Billing and Insurance";
 
   // Split heading into lines for better mobile display
-  const getHeadingLines = (text: string) => {
+  const getHeadingLines = () => {
     if (user) {
       return [`Welcome Back,`, `${firstName}!`];
     }
@@ -39,7 +35,7 @@ export function HeroSectionOne({ user }: { user: User | null }) {
     return [`Cloud Inc. Co`, `Billing and Insurance`];
   };
 
-  const headingLines = getHeadingLines(headingText);
+  const headingLines = getHeadingLines();
 
   return (
     <section className="relative min-h-screen w-full overflow-hidden">

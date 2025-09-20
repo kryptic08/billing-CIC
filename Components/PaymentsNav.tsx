@@ -1,25 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { createClient } from "@/utils/supabase/client";
 import {
   isUserAdminClient,
   grantAdminPrivilegesClient,
 } from "@/lib/supabase-db";
+import type { User } from "@supabase/supabase-js";
 
 const PaymentsNav = () => {
   const [isAdmin, setIsAdmin] = useState(false);
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   const supabase = createClient();
 
-  useEffect(() => {
-    checkUserStatus();
-  }, []);
-
-  const checkUserStatus = async () => {
+  const checkUserStatus = useCallback(async () => {
     try {
       const {
         data: { user },
@@ -37,7 +34,11 @@ const PaymentsNav = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase]);
+
+  useEffect(() => {
+    checkUserStatus();
+  }, [checkUserStatus]);
 
   const handleGrantAdmin = async () => {
     if (!user) return;

@@ -178,10 +178,11 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
                   <div className="mt-4 text-xs text-gray-400">
                     <p>Example questions:</p>
                     <p>
-                      • "What are the top 5 diagnosis codes by billing amount?"
+                      • &quot;What are the top 5 diagnosis codes by billing
+                      amount?&quot;
                     </p>
-                    <p>• "Show me outstanding payment trends"</p>
-                    <p>• "Analyze insurance claim patterns"</p>
+                    <p>• &quot;Show me outstanding payment trends&quot;</p>
+                    <p>• &quot;Analyze insurance claim patterns&quot;</p>
                   </div>
                 </div>
               )}

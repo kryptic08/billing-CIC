@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { createClient } from "@/utils/supabase/client";
 import {
   isUserAdminClient,
@@ -9,6 +9,7 @@ import {
   getAllUsersClient,
   getAllPaymentRecordsClient,
 } from "@/lib/supabase-db";
+import type { User } from "@supabase/supabase-js";
 
 interface UserRole {
   user_id: string;
@@ -43,15 +44,38 @@ export default function AdminPanel() {
   const [activeTab, setActiveTab] = useState<"users" | "records">("users");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const supabase = createClient();
 
-  useEffect(() => {
-    checkAdminStatus();
-  }, []);
+  const loadUsers = useCallback(async () => {
+    try {
+      const userData = await getAllUsersClient(currentUser);
+      // Transform the data to match our interface
+      const transformedUsers = userData.map((user) => ({
+        ...user,
+        profiles: Array.isArray(user.profiles)
+          ? user.profiles[0] || null
+          : user.profiles,
+      }));
+      setUsers(transformedUsers);
+    } catch (err) {
+      console.error("Error loading users:", err);
+      setError("Failed to load users");
+    }
+  }, [currentUser]);
 
-  const checkAdminStatus = async () => {
+  const loadAllRecords = useCallback(async () => {
+    try {
+      const records = await getAllPaymentRecordsClient(currentUser);
+      setAllRecords(records);
+    } catch (err) {
+      console.error("Error loading records:", err);
+      setError("Failed to load payment records");
+    }
+  }, [currentUser]);
+
+  const checkAdminStatus = useCallback(async () => {
     try {
       const {
         data: { user },
@@ -68,41 +92,19 @@ export default function AdminPanel() {
         }
       } else {
         console.log("AdminPanel - No user found");
+        setIsAdmin(false);
       }
-    } catch (err) {
-      console.error("Error checking admin status:", err);
-      setError("Failed to check admin status");
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      setIsAdmin(false);
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase, loadUsers, loadAllRecords]);
 
-  const loadUsers = async () => {
-    try {
-      const userData = await getAllUsersClient(currentUser);
-      // Transform the data to match our interface
-      const transformedUsers = userData.map((user) => ({
-        ...user,
-        profiles: Array.isArray(user.profiles)
-          ? user.profiles[0] || null
-          : user.profiles,
-      }));
-      setUsers(transformedUsers);
-    } catch (err) {
-      console.error("Error loading users:", err);
-      setError("Failed to load users");
-    }
-  };
-
-  const loadAllRecords = async () => {
-    try {
-      const records = await getAllPaymentRecordsClient(currentUser);
-      setAllRecords(records);
-    } catch (err) {
-      console.error("Error loading records:", err);
-      setError("Failed to load payment records");
-    }
-  };
+  useEffect(() => {
+    checkAdminStatus();
+  }, [checkAdminStatus]);
 
   const handleGrantAdmin = async (userId: string) => {
     try {
@@ -158,7 +160,7 @@ export default function AdminPanel() {
           Access Denied
         </h3>
         <p className="text-gray-500">
-          You don't have admin privileges to access this panel.
+          You don&apos;t have admin privileges to access this panel.
         </p>
       </div>
     );

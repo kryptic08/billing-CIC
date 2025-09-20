@@ -29,7 +29,7 @@ export interface BillingRecord {
   PaymentStatus: string;
 }
 
-const safeStringifyError = (err: any) => {
+const safeStringifyError = (err: unknown) => {
   try {
     if (!err) return String(err);
     if (err instanceof Error) return err.message;
@@ -189,7 +189,7 @@ export const getBillingAnalyticsClient = async () => {
 // Test function for the billing table
 export const testBillingConnection = async () => {
   try {
-    const { data, error } = await supabase
+    const { error } = await supabase
       .from('billing_and_insurance')
       .select('PatientID')
       .limit(1);

@@ -137,10 +137,12 @@ const PaymentForm: React.FC = () => {
         total_price_php: "",
         terms_accepted: "",
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error submitting payment record:", error);
       setSubmitMessage(
-        error.message || "Error submitting payment record. Please try again."
+        error instanceof Error
+          ? error.message
+          : "Error submitting payment record. Please try again."
       );
     } finally {
       setIsSubmitting(false);

@@ -92,8 +92,8 @@ export function PricingCreative() {
             Choose Your Healthcare Plan
           </h2>
           <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto px-3 sm:px-4">
-            Quality healthcare shouldn't be out of reach. Select the perfect
-            plan that fits your needs and budget.
+            Quality healthcare shouldn&apos;t be out of reach. Select the
+            perfect plan that fits your needs and budget.
           </p>
         </motion.div>
 

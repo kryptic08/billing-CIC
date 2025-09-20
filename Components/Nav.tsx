@@ -176,7 +176,7 @@ const NavBar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-1">
-            {navItems.map((item, index) => (
+            {navItems.map((item) => (
               <div
                 key={item.label}
                 className="relative"
