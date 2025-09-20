@@ -5,16 +5,20 @@ import { createClient } from '@supabase/supabase-js';
 export const runtime = 'nodejs';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+const supabaseServiceKey = process.env.NEXT_PUBLIC_SERVICE_ROLE_KEY!;
 
-if (!supabaseUrl || !supabaseKey) {
+if (!supabaseUrl || !supabaseAnonKey) {
   console.error('Missing Supabase environment variables:', {
     hasUrl: !!supabaseUrl,
-    hasKey: !!supabaseKey
+    hasAnonKey: !!supabaseAnonKey,
+    hasServiceKey: !!supabaseServiceKey
   });
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Create both regular and service role clients
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
+const supabaseService = supabaseServiceKey ? createClient(supabaseUrl, supabaseServiceKey) : null;
 
 interface BillingRecord {
   PatientID: number;
@@ -38,10 +42,10 @@ interface BillingRecord {
   PaymentStatus: string;
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
     // Check if Supabase is properly configured
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabaseUrl || !supabaseAnonKey) {
       return NextResponse.json(
         { 
           error: 'Database service is not properly configured', 
@@ -51,10 +55,26 @@ export async function GET() {
       );
     }
 
-    console.log('Billing Data API: Fetching all patient records from Supabase...');
+    // Check if this is an internal request (from AI API)
+    const url = new URL(request.url);
+    const isInternalRequest = url.searchParams.get('internal') === 'true' || 
+                             request.headers.get('user-agent')?.includes('node') ||
+                             request.headers.get('x-forwarded-for') === null;
+
+    console.log('Billing Data API: Request details:', {
+      isInternal: isInternalRequest,
+      hasServiceKey: !!supabaseServiceKey,
+      userAgent: request.headers.get('user-agent')?.substring(0, 50)
+    });
+
+    // Use service role client for internal requests if available
+    const clientToUse = (isInternalRequest && supabaseService) ? supabaseService : supabase;
+    const clientType = (isInternalRequest && supabaseService) ? 'service' : 'anon';
+    
+    console.log(`Billing Data API: Using ${clientType} client to fetch records...`);
     
     // Fetch ALL billing data from Supabase (no limit for complete dataset)
-    const { data, error } = await supabase
+    const { data, error } = await clientToUse
       .from('billing_and_insurance')
       .select('*')
       .order('AdmissionDate', { ascending: false });

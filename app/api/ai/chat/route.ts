@@ -83,7 +83,7 @@ export async function POST(request: NextRequest) {
       ? process.env.NEXT_PUBLIC_SITE_URL
       : 'http://localhost:3000';
     
-    const billingApiUrl = `${baseUrl}/api/billing/data`;
+    const billingApiUrl = `${baseUrl}/api/billing/data?internal=true`;
     console.log('AI API: Calling billing API at:', billingApiUrl);
     
     // Fetch all billing data from our dedicated billing data API with timeout
@@ -96,6 +96,7 @@ export async function POST(request: NextRequest) {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'User-Agent': 'AI-Internal-Request',
         },
         signal: controller.signal,
       });

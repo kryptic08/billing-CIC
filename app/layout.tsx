@@ -14,9 +14,10 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000"
+    process.env.NEXT_PUBLIC_SITE_URL ||
+      (process.env.VERCEL_URL
+        ? `https://${process.env.VERCEL_URL}`
+        : "http://localhost:3000")
   ),
   title: "Billing and Insurance CIC",
   description: "AI-powered billing and insurance claims management",
@@ -26,7 +27,6 @@ export const metadata: Metadata = {
   openGraph: {
     title: "Billing and Insurance CIC",
     description: "AI-powered billing and insurance claims management",
-    url: "https://billing-cic.vercel.app",
     siteName: "Billing and Insurance CIC",
     images: [
       {
