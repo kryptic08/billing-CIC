@@ -1,0 +1,244 @@
+{
+  "database_name": "AI Nako Payment Records",
+  "tables": {
+    "profiles": {
+      "description": "User profile information extending auth.users",
+      "columns": [
+        {
+          "name": "id",
+          "type": "UUID",
+          "primary_key": true,
+          "foreign_key": "auth.users.id"
+        },
+        {
+          "name": "email",
+          "type": "TEXT"
+        },
+        {
+          "name": "full_name",
+          "type": "TEXT"
+        },
+        {
+          "name": "avatar_url",
+          "type": "TEXT"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP"
+        }
+      ]
+    },
+    "user_roles": {
+      "description": "User role assignments for admin privileges",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGSERIAL",
+          "primary_key": true
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "foreign_key": "auth.users.id"
+        },
+        {
+          "name": "role",
+          "type": "TEXT",
+          "check": "IN ('admin', 'user')"
+        },
+        {
+          "name": "granted_by",
+          "type": "UUID",
+          "foreign_key": "auth.users.id"
+        },
+        {
+          "name": "granted_at",
+          "type": "TIMESTAMP"
+        }
+      ]
+    },
+    "patients": {
+      "description": "Patient demographic and contact information",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGSERIAL",
+          "primary_key": true
+        },
+        {
+          "name": "patient_id",
+          "type": "TEXT",
+          "unique": true
+        },
+        {
+          "name": "full_name",
+          "type": "TEXT"
+        },
+        {
+          "name": "email",
+          "type": "TEXT",
+          "unique": true
+        },
+        {
+          "name": "phone",
+          "type": "TEXT"
+        },
+        {
+          "name": "address",
+          "type": "TEXT"
+        },
+        {
+          "name": "date_of_birth",
+          "type": "DATE"
+        },
+        {
+          "name": "emergency_contact",
+          "type": "TEXT"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP"
+        }
+      ]
+    },
+    "payment_records": {
+      "description": "Payment transaction records",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGSERIAL",
+          "primary_key": true
+        },
+        {
+          "name": "patient_id",
+          "type": "TEXT",
+          "foreign_key": "patients.patient_id"
+        },
+        {
+          "name": "user_id",
+          "type": "UUID",
+          "foreign_key": "auth.users.id"
+        },
+        {
+          "name": "full_name",
+          "type": "TEXT"
+        },
+        {
+          "name": "address",
+          "type": "TEXT"
+        },
+        {
+          "name": "bank_name",
+          "type": "TEXT"
+        },
+        {
+          "name": "bank_account_number",
+          "type": "BIGINT"
+        },
+        {
+          "name": "paying_for",
+          "type": "TEXT"
+        },
+        {
+          "name": "insurance_provider",
+          "type": "TEXT"
+        },
+        {
+          "name": "insurance_tier_availed",
+          "type": "TEXT"
+        },
+        {
+          "name": "medication_used",
+          "type": "TEXT"
+        },
+        {
+          "name": "quantity",
+          "type": "BIGINT"
+        },
+        {
+          "name": "total_price_php",
+          "type": "DOUBLE PRECISION"
+        },
+        {
+          "name": "terms_accepted",
+          "type": "TEXT"
+        },
+        {
+          "name": "payment_status",
+          "type": "TEXT",
+          "check": "IN ('pending', 'completed', 'failed')"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP"
+        },
+        {
+          "name": "updated_at",
+          "type": "TIMESTAMP"
+        }
+      ]
+    },
+    "payment_terms": {
+      "description": "Available payment term options",
+      "columns": [
+        {
+          "name": "id",
+          "type": "BIGSERIAL",
+          "primary_key": true
+        },
+        {
+          "name": "term_name",
+          "type": "TEXT",
+          "unique": true
+        },
+        {
+          "name": "description",
+          "type": "TEXT"
+        },
+        {
+          "name": "is_active",
+          "type": "BOOLEAN"
+        },
+        {
+          "name": "created_at",
+          "type": "TIMESTAMP"
+        }
+      ]
+    }
+  },
+  "relationships": [
+    {
+      "from": "auth.users.id",
+      "to": "profiles.id",
+      "type": "1:1"
+    },
+    {
+      "from": "auth.users.id",
+      "to": "user_roles.user_id",
+      "type": "1:N"
+    },
+    {
+      "from": "auth.users.id",
+      "to": "payment_records.user_id",
+      "type": "1:N"
+    },
+    {
+      "from": "patients.patient_id",
+      "to": "payment_records.patient_id",
+      "type": "1:N"
+    },
+    {
+      "from": "auth.users.id",
+      "to": "user_roles.granted_by",
+      "type": "N:1"
+    }
+  ]
+}

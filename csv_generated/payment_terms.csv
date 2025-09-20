@@ -1,0 +1,7 @@
+id,term_name,description,is_active,created_at
+1,Cash Payment,Immediate payment in full,True,2024-11-17 00:00:00.000+00
+2,Installment Plan,Payment in multiple installments,True,2024-05-07 00:00:00.000+00
+3,Insurance Covered,Covered by insurance provider,True,2024-02-06 00:00:00.000+00
+4,Partial Payment,Partial payment with balance due,True,2024-08-18 00:00:00.000+00
+5,Credit Card,Payment via credit card,True,2024-12-30 00:00:00.000+00
+6,Bank Transfer,Direct bank transfer,True,2024-03-28 00:00:00.000+00
