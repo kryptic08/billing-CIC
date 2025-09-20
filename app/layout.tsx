@@ -13,10 +13,37 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Biling and Insurance CIC",
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000"
+  ),
+  title: "Billing and Insurance CIC",
   description: "AI-powered billing and insurance claims management",
   icons: {
     icon: "/cloud.svg",
+  },
+  openGraph: {
+    title: "Billing and Insurance CIC",
+    description: "AI-powered billing and insurance claims management",
+    url: "https://billing-cic.vercel.app",
+    siteName: "Billing and Insurance CIC",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "Billing and Insurance CIC - AI-powered healthcare management",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Billing and Insurance CIC",
+    description: "AI-powered billing and insurance claims management",
+    images: ["/og-image.png"],
   },
 };
 

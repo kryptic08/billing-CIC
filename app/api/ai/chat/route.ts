@@ -6,8 +6,17 @@ interface ChatMessage {
   content: string;
 }
 
+// Force Node.js runtime for this route (important for Vercel)
+export const runtime = 'nodejs';
+
 // Validate environment variables with better error handling
 const geminiApiKey = process.env.NEXT_GEMINI_KEY || process.env.GOOGLE_AI_API_KEY;
+
+console.log('AI Route Initialization:', {
+  hasGeminiKey: !!geminiApiKey,
+  runtime: 'nodejs',
+  timestamp: new Date().toISOString()
+});
 
 if (!geminiApiKey) {
   console.error('Missing Google AI API key. Please set NEXT_GEMINI_KEY or GOOGLE_AI_API_KEY environment variable.');
@@ -17,13 +26,16 @@ if (!geminiApiKey) {
 const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null;
 
 export async function POST(request: NextRequest) {
+  console.log('AI API: Request received at', new Date().toISOString());
+  
   try {
     // Debug environment variables
     console.log('AI API: Environment check:', {
       hasGeminiKey: !!geminiApiKey,
       hasVercelUrl: !!process.env.VERCEL_URL,
       hasSiteUrl: !!process.env.NEXT_PUBLIC_SITE_URL,
-      nodeEnv: process.env.NODE_ENV
+      nodeEnv: process.env.NODE_ENV,
+      vercelUrl: process.env.VERCEL_URL ? `${process.env.VERCEL_URL.substring(0, 20)}...` : 'none'
     });
 
     // Check if AI is properly configured
@@ -32,13 +44,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { 
           error: 'AI service is not properly configured', 
-          details: 'Missing Google AI API key in environment variables'
+          details: 'Missing Google AI API key in environment variables',
+          debug: {
+            hasGeminiKey: !!geminiApiKey,
+            env: process.env.NODE_ENV
+          }
         },
         { status: 500 }
       );
     }
 
-    const { message, chatHistory } = await request.json();
+    const body = await request.json();
+    console.log('AI API: Request body received:', {
+      hasMessage: !!body.message,
+      messageLength: body.message?.length || 0,
+      hasChatHistory: !!body.chatHistory,
+      chatHistoryLength: body.chatHistory?.length || 0
+    });
+
+    const { message, chatHistory } = body;
 
     if (!message) {
       return NextResponse.json(

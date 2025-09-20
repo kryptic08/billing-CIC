@@ -57,6 +57,7 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
     setIsLoading(true);
 
     try {
+      console.log("Sending request to AI API...");
       const response = await fetch("/api/ai/chat", {
         method: "POST",
         headers: {
@@ -71,11 +72,20 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
         }),
       });
 
+      console.log("AI API Response status:", response.status);
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => null);
+        console.error("AI API Error:", errorData);
+        throw new Error(
+          `HTTP error! status: ${response.status}, details: ${
+            errorData?.details || "Unknown error"
+          }`
+        );
       }
 
       const data = await response.json();
+      console.log("AI API Response received:", data.success);
 
       const assistantMessage: ChatMessage = {
         role: "assistant",
@@ -91,7 +101,9 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
       const errorMessage: ChatMessage = {
         role: "assistant",
         content:
-          "Sorry, I encountered an error while processing your request. Please try again.",
+          error instanceof Error
+            ? `Error: ${error.message}. Please check the console for more details.`
+            : "Sorry, I encountered an error while processing your request. Please try again.",
         timestamp: new Date(),
       };
       setChatHistory((prev) => [...prev, errorMessage]);

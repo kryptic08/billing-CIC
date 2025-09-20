@@ -6,6 +6,7 @@ import { TextShimmer } from "./TextShimmer";
 import { User } from "@supabase/supabase-js";
 import LaserFlow from "./LaserFlow";
 import TextInput from "./TextInput";
+import ErrorBoundary from "./ErrorBoundary";
 import { CloudLightningIcon } from "lucide-react";
 import Image from "next/image";
 
@@ -229,7 +230,26 @@ export function HeroSectionOne({ user }: { user: User | null }) {
       </div>
 
       {/* AI Modal */}
-      <TextInput isOpen={showAIModal} onClose={() => setShowAIModal(false)} />
+      <ErrorBoundary
+        fallback={
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+            <div className="bg-white p-6 rounded-lg">
+              <h3 className="text-red-800 font-semibold">AI Chat Error</h3>
+              <p className="text-red-600 text-sm mt-2">
+                Unable to load AI chat component
+              </p>
+              <button
+                onClick={() => setShowAIModal(false)}
+                className="mt-3 px-3 py-1 bg-gray-200 rounded"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        }
+      >
+        <TextInput isOpen={showAIModal} onClose={() => setShowAIModal(false)} />
+      </ErrorBoundary>
     </section>
   );
 }
