@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
+interface ChatMessage {
+  role: string;
+  content: string;
+}
+
 // Validate environment variables with better error handling
 const geminiApiKey = process.env.NEXT_GEMINI_KEY || process.env.GOOGLE_AI_API_KEY;
 
@@ -13,6 +18,14 @@ const genAI = geminiApiKey ? new GoogleGenerativeAI(geminiApiKey) : null;
 
 export async function POST(request: NextRequest) {
   try {
+    // Debug environment variables
+    console.log('AI API: Environment check:', {
+      hasGeminiKey: !!geminiApiKey,
+      hasVercelUrl: !!process.env.VERCEL_URL,
+      hasSiteUrl: !!process.env.NEXT_PUBLIC_SITE_URL,
+      nodeEnv: process.env.NODE_ENV
+    });
+
     // Check if AI is properly configured
     if (!genAI) {
       console.error('Google AI not initialized - missing API key');
@@ -25,7 +38,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { message } = await request.json();
+    const { message, chatHistory } = await request.json();
 
     if (!message) {
       return NextResponse.json(
@@ -33,6 +46,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    console.log('AI API: Received message:', message);
+    console.log('AI API: Chat history length:', chatHistory?.length || 0);
 
     console.log('AI API: Fetching comprehensive billing data...');
     
@@ -158,6 +174,11 @@ You have access to ALL ${summary.totalRecords} records covering ${summary.totalP
 
     console.log(`Data context prepared with ${summary.totalRecords} records for ${summary.totalPatients} patients`);
 
+    // Include chat history if available for better context
+    const conversationHistory = chatHistory && chatHistory.length > 0 
+      ? `\n\nCONVERSATION HISTORY:\n${chatHistory.map((msg: ChatMessage) => `${msg.role.toUpperCase()}: ${msg.content}`).join('\n')}\n`
+      : '';
+
     const systemPrompt = `You are a healthcare billing and insurance AI assistant. You have access to billing data from a healthcare management system. Your role is to:
 
 1. Help users understand their billing and insurance data
@@ -168,9 +189,9 @@ You have access to ALL ${summary.totalRecords} records covering ${summary.totalP
 
 Please be professional, accurate, and helpful. If you don't have enough information to answer a question completely, let the user know what additional information would be helpful.
 
-${dataContext}
+${dataContext}${conversationHistory}
 
-User Question: ${message}`;
+Current User Question: ${message}`;
 
     console.log('AI API: Sending request to Gemini...');
 

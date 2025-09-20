@@ -26,8 +26,8 @@ export default async function Home() {
           <HeroSectionOne user={user} />
         </div>
 
-        {/* Pricing Section with Better Spacing */}
-        <StatsSection />
+        {/* Stats Section - Only for logged in users */}
+        {user && <StatsSection />}
 
         <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 py-8 sm:py-12 md:py-16">
           <PricingCreative />
