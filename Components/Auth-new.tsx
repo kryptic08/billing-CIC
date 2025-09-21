@@ -81,20 +81,33 @@ export default function Auth() {
       }
 
       console.log("Resending verification email with site URL:", siteUrl);
+      console.log("Resending to email:", userEmail);
 
-      const { error } = await supabase.auth.resend({
-        type: "signup",
+      const resendOptions = {
+        type: "signup" as const,
         email: userEmail,
         options: {
           emailRedirectTo: `${siteUrl}/auth/callback`,
         },
-      });
+      };
+
+      console.log("Resend options:", resendOptions);
+
+      const { error } = await supabase.auth.resend(resendOptions);
+
+      console.log("Resend response error:", error);
 
       if (error) {
         console.error("Resend error:", error);
-        setAuthError("Failed to resend verification email. Please try again.");
+        setAuthError(`Failed to resend verification email: ${error.message}`);
       } else {
         setAuthError("");
+        console.log("✅ Verification email resent successfully");
+        if (process.env.NODE_ENV === "development") {
+          console.log(
+            "🚀 DEVELOPMENT MODE: Check Inbucket at http://localhost:54324 for the verification email"
+          );
+        }
         // Show success message briefly
         const successMsg = "Verification email sent! Check your inbox.";
         setAuthError("");
@@ -163,8 +176,14 @@ export default function Auth() {
         }
 
         console.log("Signup attempt with site URL:", siteUrl);
+        console.log(
+          "Email confirmations enabled in config:",
+          process.env.NODE_ENV === "development"
+            ? "Check Inbucket at localhost:54324"
+            : "Production SMTP"
+        );
 
-        const { data, error } = await supabase.auth.signUp({
+        const signUpOptions = {
           email: formData.email,
           password: formData.password,
           options: {
@@ -173,26 +192,51 @@ export default function Auth() {
             },
             emailRedirectTo: `${siteUrl}/auth/callback`,
           },
-        });
+        };
+
+        console.log("Signup options:", signUpOptions);
+
+        const { data, error } = await supabase.auth.signUp(signUpOptions);
 
         console.log("Signup response:", { data, error });
 
         if (error) {
           console.error("Supabase signup error:", error);
-          throw error;
+          // Check for specific email-related errors
+          if (error.message?.includes("email")) {
+            setAuthError(
+              `Email error: ${error.message}. Please check your email address and try again.`
+            );
+          } else {
+            throw error;
+          }
+          return;
         }
 
         if (data?.user) {
           console.log("User created:", data.user);
           console.log("Email confirmed at:", data.user.email_confirmed_at);
+          console.log("User ID:", data.user.id);
+          console.log("User email:", data.user.email);
 
-          // Always show verification screen for new signups, regardless of confirmation status
-          // This is because Supabase might not immediately show email_confirmed_at as null
+          // Check if we're in development mode
+          if (process.env.NODE_ENV === "development") {
+            console.log(
+              "🚀 DEVELOPMENT MODE: Check Inbucket at http://localhost:54324 for the verification email"
+            );
+          }
+
+          // Always show verification screen for new signups
           setUserEmail(formData.email);
           setShowEmailVerification(true);
 
           // Show success message
           console.log("Email verification screen shown for:", formData.email);
+        } else {
+          console.error("No user data returned from signup");
+          setAuthError(
+            "Signup failed: No user data returned. Please try again."
+          );
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -303,6 +347,23 @@ export default function Auth() {
                 Check your inbox and spam folder. The verification link will be
                 valid for 1 hour.
               </p>
+              {process.env.NODE_ENV === "development" && (
+                <div className="mt-3 p-2 bg-blue-900/20 border border-blue-800 rounded">
+                  <p className="text-blue-300 text-xs">
+                    🔧 <strong>Development Mode:</strong> Emails are captured by
+                    Inbucket.
+                    <br />
+                    <a
+                      href="http://localhost:54324"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-blue-400 underline hover:text-blue-300"
+                    >
+                      Click here to check captured emails
+                    </a>
+                  </p>
+                </div>
+              )}
               <p className="text-xs text-gray-500">
                 💡 The button below opens Gmail, but you can use any email app
                 to check your {userEmail.split("@")[1]} email.
