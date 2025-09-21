@@ -53,6 +53,41 @@ export default function Auth() {
     return true;
   };
 
+  const resendVerificationEmail = async () => {
+    try {
+      setIsLoading(true);
+      const { error } = await supabase.auth.resend({
+        type: "signup",
+        email: userEmail,
+        options: {
+          emailRedirectTo: `${
+            process.env.NEXT_PUBLIC_SITE_URL ||
+            (typeof window !== "undefined"
+              ? window.location.origin
+              : "http://localhost:3000")
+          }/auth/callback`,
+        },
+      });
+
+      if (error) {
+        console.error("Resend error:", error);
+        setAuthError("Failed to resend verification email. Please try again.");
+      } else {
+        setAuthError("");
+        // Show success message briefly
+        const successMsg = "Verification email sent! Check your inbox.";
+        setAuthError("");
+        // You could add a success state here if needed
+        console.log(successMsg);
+      }
+    } catch (error) {
+      console.error("Resend verification error:", error);
+      setAuthError("Failed to resend verification email. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const openEmailProvider = () => {
     const email = userEmail || formData.email;
     const domain = email.split("@")[1]?.toLowerCase();
@@ -126,6 +161,8 @@ export default function Auth() {
             ? window.location.origin
             : "http://localhost:3000");
 
+        console.log("Signup attempt with site URL:", siteUrl);
+
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -137,19 +174,24 @@ export default function Auth() {
           },
         });
 
+        console.log("Signup response:", { data, error });
+
         if (error) {
           console.error("Supabase signup error:", error);
           throw error;
         }
 
         if (data?.user) {
-          if (!data.user.email_confirmed_at) {
-            setUserEmail(formData.email);
-            setShowEmailVerification(true);
-          } else {
-            // User is immediately confirmed, redirect to homepage
-            router.push("/");
-          }
+          console.log("User created:", data.user);
+          console.log("Email confirmed at:", data.user.email_confirmed_at);
+
+          // Always show verification screen for new signups, regardless of confirmation status
+          // This is because Supabase might not immediately show email_confirmed_at as null
+          setUserEmail(formData.email);
+          setShowEmailVerification(true);
+
+          // Show success message
+          console.log("Email verification screen shown for:", formData.email);
         }
       } else {
         const { data, error } = await supabase.auth.signInWithPassword({
@@ -247,13 +289,20 @@ export default function Auth() {
                 />
               </svg>
             </div>
-            <h2 className="text-3xl font-bold text-white">
-              Check Your Email iloveuzeus
-            </h2>
+            <h2 className="text-3xl font-bold text-white">Check Your Email</h2>
             <p className="text-gray-300">
               We&apos;ve sent a verification link to
             </p>
             <p className="text-blue-400 font-medium break-all">{userEmail}</p>
+            <div className="text-sm text-gray-400 bg-gray-700/50 p-3 rounded-lg">
+              <p className="mb-2">
+                📧 <strong>Email sent!</strong>
+              </p>
+              <p>
+                Check your inbox and spam folder. The verification link will be
+                valid for 1 hour.
+              </p>
+            </div>
           </div>
 
           <div className="space-y-6">
@@ -278,6 +327,15 @@ export default function Auth() {
               className="w-full flex items-center justify-center py-3 px-4 border border-gray-600 text-sm font-medium rounded-lg text-white bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200"
             >
               I&apos;ve verified my email
+            </button>
+
+            {/* Resend Email Button */}
+            <button
+              onClick={resendVerificationEmail}
+              disabled={isLoading}
+              className="w-full flex items-center justify-center py-3 px-4 border border-gray-600 text-sm font-medium rounded-lg text-gray-300 bg-transparent hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-all duration-200 disabled:opacity-50"
+            >
+              {isLoading ? "Sending..." : "Resend verification email"}
             </button>
 
             {/* Error Message */}
