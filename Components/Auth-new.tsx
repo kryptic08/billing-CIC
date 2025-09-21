@@ -56,16 +56,34 @@ export default function Auth() {
   const resendVerificationEmail = async () => {
     try {
       setIsLoading(true);
+
+      // Use the same URL logic as signup
+      let siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+      if (!siteUrl) {
+        if (typeof window !== "undefined") {
+          const currentOrigin = window.location.origin;
+          if (
+            currentOrigin.includes("vercel.app") ||
+            currentOrigin.includes("dw.kirbycope.com") ||
+            currentOrigin.includes("kirbycope.com")
+          ) {
+            siteUrl = currentOrigin;
+          } else {
+            siteUrl = "https://dw.kirbycope.com";
+          }
+        } else {
+          siteUrl = "https://dw.kirbycope.com";
+        }
+      }
+
+      console.log("Resending verification email with site URL:", siteUrl);
+
       const { error } = await supabase.auth.resend({
         type: "signup",
         email: userEmail,
         options: {
-          emailRedirectTo: `${
-            process.env.NEXT_PUBLIC_SITE_URL ||
-            (typeof window !== "undefined"
-              ? window.location.origin
-              : "http://localhost:3000")
-          }/auth/callback`,
+          emailRedirectTo: `${siteUrl}/auth/callback`,
         },
       });
 
@@ -89,45 +107,9 @@ export default function Auth() {
   };
 
   const openEmailProvider = () => {
-    const email = userEmail || formData.email;
-    const domain = email.split("@")[1]?.toLowerCase();
-
-    let emailUrl = "https://mail.google.com"; // Default to Gmail
-
-    // Detect email provider and open appropriate webmail
-    if (domain) {
-      switch (domain) {
-        case "gmail.com":
-        case "googlemail.com":
-          emailUrl = "https://mail.google.com";
-          break;
-        case "outlook.com":
-        case "hotmail.com":
-        case "live.com":
-        case "msn.com":
-          emailUrl = "https://outlook.live.com";
-          break;
-        case "yahoo.com":
-        case "ymail.com":
-        case "rocketmail.com":
-          emailUrl = "https://mail.yahoo.com";
-          break;
-        case "icloud.com":
-        case "me.com":
-        case "mac.com":
-          emailUrl = "https://www.icloud.com/mail";
-          break;
-        case "aol.com":
-          emailUrl = "https://mail.aol.com";
-          break;
-        default:
-          // For other providers, try to construct a webmail URL
-          emailUrl = `https://mail.${domain}`;
-          break;
-      }
-    }
-
-    window.open(emailUrl, "_blank");
+    // Simply open Gmail by default - most universal email access point
+    // Users can navigate to their actual email provider from there if needed
+    window.open("https://mail.google.com", "_blank");
   };
 
   const checkEmailVerification = async () => {
@@ -155,11 +137,29 @@ export default function Auth() {
     try {
       if (isSignUp) {
         // Get the current site URL for email verification redirects
-        const siteUrl =
-          process.env.NEXT_PUBLIC_SITE_URL ||
-          (typeof window !== "undefined"
-            ? window.location.origin
-            : "http://localhost:3000");
+        // Priority: Environment variable > Production domain > Current origin > Fallback
+        let siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+
+        if (!siteUrl) {
+          // Check if we're in production by looking at the current origin
+          if (typeof window !== "undefined") {
+            const currentOrigin = window.location.origin;
+            // If current origin includes vercel.app or your custom domain, use it
+            if (
+              currentOrigin.includes("vercel.app") ||
+              currentOrigin.includes("dw.kirbycope.com") ||
+              currentOrigin.includes("kirbycope.com")
+            ) {
+              siteUrl = currentOrigin;
+            } else {
+              // Default to your production domain if not in a recognized production environment
+              siteUrl = "https://dw.kirbycope.com";
+            }
+          } else {
+            // Server-side fallback to production domain
+            siteUrl = "https://dw.kirbycope.com";
+          }
+        }
 
         console.log("Signup attempt with site URL:", siteUrl);
 
@@ -298,9 +298,13 @@ export default function Auth() {
               <p className="mb-2">
                 📧 <strong>Email sent!</strong>
               </p>
-              <p>
+              <p className="mb-2">
                 Check your inbox and spam folder. The verification link will be
                 valid for 1 hour.
+              </p>
+              <p className="text-xs text-gray-500">
+                💡 The button below opens Gmail, but you can use any email app
+                to check your {userEmail.split("@")[1]} email.
               </p>
             </div>
           </div>
@@ -318,7 +322,7 @@ export default function Auth() {
               >
                 <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-.887.732-1.636 1.636-1.636h1.818L12 10.545l8.545-6.724h1.819c.904 0 1.636.749 1.636 1.636z" />
               </svg>
-              Open Email
+              Open Email App
             </button>
 
             {/* Check Verification Button */}
