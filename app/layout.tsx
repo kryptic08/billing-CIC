@@ -20,7 +20,7 @@ export const metadata: Metadata = {
       : process.env.NEXT_PUBLIC_SITE_URL ||
         (process.env.VERCEL_URL
           ? `https://${process.env.VERCEL_URL}`
-          : "http://localhost:3000")
+          : "http://dw.kirbycope.com")
   ),
   title: "Billing and Insurance CIC",
   description: "AI-powered billing and insurance claims management",
