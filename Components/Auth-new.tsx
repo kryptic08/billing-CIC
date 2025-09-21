@@ -53,8 +53,46 @@ export default function Auth() {
     return true;
   };
 
-  const openGmail = () => {
-    window.open("https://mail.google.com", "_blank");
+  const openEmailProvider = () => {
+    const email = userEmail || formData.email;
+    const domain = email.split("@")[1]?.toLowerCase();
+
+    let emailUrl = "https://mail.google.com"; // Default to Gmail
+
+    // Detect email provider and open appropriate webmail
+    if (domain) {
+      switch (domain) {
+        case "gmail.com":
+        case "googlemail.com":
+          emailUrl = "https://mail.google.com";
+          break;
+        case "outlook.com":
+        case "hotmail.com":
+        case "live.com":
+        case "msn.com":
+          emailUrl = "https://outlook.live.com";
+          break;
+        case "yahoo.com":
+        case "ymail.com":
+        case "rocketmail.com":
+          emailUrl = "https://mail.yahoo.com";
+          break;
+        case "icloud.com":
+        case "me.com":
+        case "mac.com":
+          emailUrl = "https://www.icloud.com/mail";
+          break;
+        case "aol.com":
+          emailUrl = "https://mail.aol.com";
+          break;
+        default:
+          // For other providers, try to construct a webmail URL
+          emailUrl = `https://mail.${domain}`;
+          break;
+      }
+    }
+
+    window.open(emailUrl, "_blank");
   };
 
   const checkEmailVerification = async () => {
@@ -81,6 +119,13 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
+        // Get the current site URL for email verification redirects
+        const siteUrl =
+          process.env.NEXT_PUBLIC_SITE_URL ||
+          (typeof window !== "undefined"
+            ? window.location.origin
+            : "http://localhost:3000");
+
         const { data, error } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -88,6 +133,7 @@ export default function Auth() {
             data: {
               full_name: formData.fullName.trim(),
             },
+            emailRedirectTo: `${siteUrl}/auth/callback`,
           },
         });
 
@@ -182,8 +228,8 @@ export default function Auth() {
   // Email Verification Screen
   if (showEmailVerification) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 p-4">
-        <div className="w-full max-w-md space-y-8 rounded-2xl bg-gray-800/90 p-8 shadow-2xl backdrop-blur-sm border border-gray-700/50">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br  p-4">
+        <div className="w-full max-w-md space-y-8 rounded-2xl bg-gray-800/20 p-8 shadow-2xl backdrop-blur-sm border border-gray-700/50">
           {/* Header */}
           <div className="text-center space-y-4">
             <div className="mx-auto h-16 w-16 rounded-full bg-gradient-to-r from-blue-500 to-blue-500 flex items-center justify-center">
@@ -201,7 +247,9 @@ export default function Auth() {
                 />
               </svg>
             </div>
-            <h2 className="text-3xl font-bold text-white">Check Your Email</h2>
+            <h2 className="text-3xl font-bold text-white">
+              Check Your Email iloveuzeus
+            </h2>
             <p className="text-gray-300">
               We&apos;ve sent a verification link to
             </p>
@@ -209,9 +257,9 @@ export default function Auth() {
           </div>
 
           <div className="space-y-6">
-            {/* Gmail Button */}
+            {/* Email Provider Button */}
             <button
-              onClick={openGmail}
+              onClick={openEmailProvider}
               className="w-full flex items-center justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-all duration-200 shadow-lg hover:shadow-xl"
             >
               <svg
@@ -221,7 +269,7 @@ export default function Auth() {
               >
                 <path d="M24 5.457v13.909c0 .904-.732 1.636-1.636 1.636h-3.819V11.73L12 16.64l-6.545-4.91v9.273H1.636A1.636 1.636 0 0 1 0 19.366V5.457c0-.887.732-1.636 1.636-1.636h1.818L12 10.545l8.545-6.724h1.819c.904 0 1.636.749 1.636 1.636z" />
               </svg>
-              Open Gmail
+              Open Email
             </button>
 
             {/* Check Verification Button */}
@@ -519,7 +567,7 @@ export default function Auth() {
             >
               {isSignUp
                 ? "Already have an account? Sign In"
-                : "Don&apos;t have an account? Sign Up"}
+                : "Don't have an account? Sign Up"}
             </button>
           </div>
         </form>
