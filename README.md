@@ -59,7 +59,7 @@ A payment records management system built with Next.js 15, TypeScript, Tailwind 
 
 ```bash
 git clone <your-repo-url>
-cd ai-nako
+cd billing-CIC
 npm install
 ```
 
