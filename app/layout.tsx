@@ -14,10 +14,13 @@ const roboto = Roboto({
 
 export const metadata: Metadata = {
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL ||
-      (process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : "http://localhost:3000")
+    // Always prioritize production URL for deployed versions
+    process.env.NODE_ENV === "production"
+      ? "https://dw.kirbycope.com"
+      : process.env.NEXT_PUBLIC_SITE_URL ||
+        (process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : "http://localhost:3000")
   ),
   title: "Billing and Insurance CIC",
   description: "AI-powered billing and insurance claims management",
