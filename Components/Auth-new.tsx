@@ -57,24 +57,27 @@ export default function Auth() {
     try {
       setIsLoading(true);
 
-      // Use the same URL logic as signup
-      let siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+      // Always prioritize production domain for email verification links
+      let siteUrl = "https://dw.kirbycope.com"; // Default to production
 
-      if (!siteUrl) {
-        if (typeof window !== "undefined") {
-          const currentOrigin = window.location.origin;
-          if (
-            currentOrigin.includes("vercel.app") ||
-            currentOrigin.includes("dw.kirbycope.com") ||
-            currentOrigin.includes("kirbycope.com")
-          ) {
-            siteUrl = currentOrigin;
-          } else {
-            siteUrl = "https://dw.kirbycope.com";
-          }
-        } else {
-          siteUrl = "https://dw.kirbycope.com";
+      // Only use environment variable if it's explicitly set and not localhost
+      if (
+        process.env.NEXT_PUBLIC_SITE_URL &&
+        !process.env.NEXT_PUBLIC_SITE_URL.includes("localhost") &&
+        !process.env.NEXT_PUBLIC_SITE_URL.includes("127.0.0.1")
+      ) {
+        siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+      } else if (typeof window !== "undefined") {
+        const currentOrigin = window.location.origin;
+        // Only use current origin if it's a known production domain
+        if (
+          currentOrigin.includes("vercel.app") ||
+          currentOrigin.includes("dw.kirbycope.com") ||
+          currentOrigin.includes("kirbycope.com")
+        ) {
+          siteUrl = currentOrigin;
         }
+        // For localhost/development, still default to production for email links
       }
 
       console.log("Resending verification email with site URL:", siteUrl);
@@ -136,29 +139,27 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
-        // Get the current site URL for email verification redirects
-        // Priority: Environment variable > Production domain > Current origin > Fallback
-        let siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+        // Always prioritize production domain for email verification links
+        let siteUrl = "https://dw.kirbycope.com"; // Default to production
 
-        if (!siteUrl) {
-          // Check if we're in production by looking at the current origin
-          if (typeof window !== "undefined") {
-            const currentOrigin = window.location.origin;
-            // If current origin includes vercel.app or your custom domain, use it
-            if (
-              currentOrigin.includes("vercel.app") ||
-              currentOrigin.includes("dw.kirbycope.com") ||
-              currentOrigin.includes("kirbycope.com")
-            ) {
-              siteUrl = currentOrigin;
-            } else {
-              // Default to your production domain if not in a recognized production environment
-              siteUrl = "https://dw.kirbycope.com";
-            }
-          } else {
-            // Server-side fallback to production domain
-            siteUrl = "https://dw.kirbycope.com";
+        // Only use environment variable if it's explicitly set and not localhost
+        if (
+          process.env.NEXT_PUBLIC_SITE_URL &&
+          !process.env.NEXT_PUBLIC_SITE_URL.includes("localhost") &&
+          !process.env.NEXT_PUBLIC_SITE_URL.includes("127.0.0.1")
+        ) {
+          siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+        } else if (typeof window !== "undefined") {
+          const currentOrigin = window.location.origin;
+          // Only use current origin if it's a known production domain
+          if (
+            currentOrigin.includes("vercel.app") ||
+            currentOrigin.includes("dw.kirbycope.com") ||
+            currentOrigin.includes("kirbycope.com")
+          ) {
+            siteUrl = currentOrigin;
           }
+          // For localhost/development, still default to production for email links
         }
 
         console.log("Signup attempt with site URL:", siteUrl);
@@ -451,6 +452,9 @@ export default function Auth() {
               className="block text-sm font-medium text-gray-300"
             >
               Email Address
+              <span className="text-xs text-gray-500 ml-2">
+                (Any email domain accepted)
+              </span>
             </label>
             <div className="relative">
               <input
@@ -459,7 +463,7 @@ export default function Auth() {
                 type="email"
                 required
                 className="block w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 pl-10 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-white transition-colors"
-                placeholder="Enter your email"
+                placeholder="e.g., coding@kirbycope.com or user@gmail.com"
                 value={formData.email}
                 onChange={handleInputChange}
               />
