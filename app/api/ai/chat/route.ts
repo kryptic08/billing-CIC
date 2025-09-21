@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { getBillingDataForAI } from '@/lib/billing-data-service';
 
 interface ChatMessage {
   role: string;
@@ -76,70 +77,21 @@ export async function POST(request: NextRequest) {
 
     console.log('AI API: Fetching comprehensive billing data...');
     
-    // Build the correct API URL for internal calls
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : process.env.NEXT_PUBLIC_SITE_URL 
-      ? process.env.NEXT_PUBLIC_SITE_URL
-      : 'http://localhost:3000';
-    
-    const billingApiUrl = `${baseUrl}/api/billing/data?internal=true`;
-    console.log('AI API: Calling billing API at:', billingApiUrl);
-    
-    // Fetch all billing data from our dedicated billing data API with timeout
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
-    
-    let billingResponse;
+    // Get billing data directly (no HTTP request needed)
+    let billingResult;
     try {
-      billingResponse = await fetch(billingApiUrl, {
-        method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': 'AI-Internal-Request',
-        },
-        signal: controller.signal,
-      });
-    } catch (fetchError) {
-      clearTimeout(timeoutId);
-      console.error('Failed to fetch billing data:', fetchError);
+      billingResult = await getBillingDataForAI();
+    } catch (dataError) {
+      console.error('Failed to fetch billing data:', dataError);
       return NextResponse.json(
         { 
           error: 'Failed to fetch billing data for AI context', 
-          details: fetchError instanceof Error ? fetchError.message : 'Network error'
-        },
-        { status: 500 }
-      );
-    }
-    
-    clearTimeout(timeoutId);
-
-    if (!billingResponse.ok) {
-      console.error('Failed to fetch billing data:', {
-        status: billingResponse.status,
-        statusText: billingResponse.statusText,
-        url: billingApiUrl
-      });
-      
-      // Try to get error details from response
-      let errorDetails = `Billing API returned status ${billingResponse.status}`;
-      try {
-        const errorResponse = await billingResponse.json();
-        errorDetails = errorResponse.error || errorDetails;
-      } catch {
-        // If we can't parse the error response, use the status
-      }
-      
-      return NextResponse.json(
-        { 
-          error: 'Failed to fetch billing data for AI context', 
-          details: errorDetails
+          details: dataError instanceof Error ? dataError.message : 'Database error'
         },
         { status: 500 }
       );
     }
 
-    const billingResult = await billingResponse.json();
     console.log('AI API: Billing data response:', {
       success: billingResult.success,
       hasData: !!billingResult.data,
