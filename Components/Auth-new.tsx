@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { useRouter } from "next/navigation";
 import { CloudMoon, HomeIcon } from "lucide-react";
@@ -16,8 +16,19 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
   const [showEmailVerification, setShowEmailVerification] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [currentUrl, setCurrentUrl] = useState("");
   const router = useRouter();
   const supabase = createClient();
+
+  // Get the current URL for production/deployment compatibility
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      // Always use production domain for email verification - no localhost fallbacks
+      const productionUrl = "https://dw.kirbycope.com";
+      setCurrentUrl(productionUrl);
+      console.log("🌐 Site URL set to:", productionUrl);
+    }
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -57,29 +68,24 @@ export default function Auth() {
     try {
       setIsLoading(true);
 
-      // ALWAYS use production domain for email verification links
-      const siteUrl = "https://dw.kirbycope.com";
-
-      console.log("Resending verification email with site URL:", siteUrl);
+      console.log("Resending verification email with site URL:", currentUrl);
       console.log("Resending to email:", userEmail);
 
       const resendOptions = {
         type: "signup" as const,
         email: userEmail,
         options: {
-          emailRedirectTo: `${siteUrl}/auth/callback`,
+          emailRedirectTo: `${currentUrl}/auth/callback`,
         },
       };
 
       console.log("Resend options:", resendOptions);
       console.log(
-        "🔗 Resend email verification redirect URL:",
-        `${siteUrl}/auth/callback`
+        "🔗 Email verification redirect URL:",
+        `${currentUrl}/auth/callback`
       );
 
       const { error } = await supabase.auth.resend(resendOptions);
-
-      console.log("Resend response error:", error);
 
       if (error) {
         console.error("Resend error:", error);
@@ -87,16 +93,10 @@ export default function Auth() {
       } else {
         setAuthError("");
         console.log("✅ Verification email resent successfully");
-        if (process.env.NODE_ENV === "development") {
-          console.log(
-            "🚀 DEVELOPMENT MODE: Check Inbucket at http://localhost:54324 for the verification email"
-          );
-        }
-        // Show success message briefly
-        const successMsg = "Verification email sent! Check your inbox.";
-        setAuthError("");
-        // You could add a success state here if needed
-        console.log(successMsg);
+        // Clear any success message after 3 seconds
+        setTimeout(() => {
+          setAuthError("");
+        }, 3000);
       }
     } catch (error) {
       console.error("Resend verification error:", error);
@@ -107,8 +107,7 @@ export default function Auth() {
   };
 
   const openEmailProvider = () => {
-    // Simply open Gmail by default - most universal email access point
-    // Users can navigate to their actual email provider from there if needed
+    // Open user's default email provider
     window.open("https://mail.google.com", "_blank");
   };
 
@@ -136,16 +135,7 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
-        // ALWAYS use production domain for email verification links
-        const siteUrl = "https://dw.kirbycope.com";
-
-        console.log("Signup attempt with site URL:", siteUrl);
-        console.log(
-          "Email confirmations enabled in config:",
-          process.env.NODE_ENV === "development"
-            ? "Check Inbucket at localhost:54324"
-            : "Production SMTP"
-        );
+        console.log("Signup attempt with site URL:", currentUrl);
 
         const signUpOptions = {
           email: formData.email,
@@ -154,14 +144,14 @@ export default function Auth() {
             data: {
               full_name: formData.fullName.trim(),
             },
-            emailRedirectTo: `${siteUrl}/auth/callback`,
+            emailRedirectTo: `${currentUrl}/auth/callback`,
           },
         };
 
         console.log("Signup options:", signUpOptions);
         console.log(
           "🔗 Email verification redirect URL:",
-          `${siteUrl}/auth/callback`
+          `${currentUrl}/auth/callback`
         );
 
         const { data, error } = await supabase.auth.signUp(signUpOptions);
@@ -170,7 +160,6 @@ export default function Auth() {
 
         if (error) {
           console.error("Supabase signup error:", error);
-          // Check for specific email-related errors
           if (error.message?.includes("email")) {
             setAuthError(
               `Email error: ${error.message}. Please check your email address and try again.`
@@ -182,23 +171,14 @@ export default function Auth() {
         }
 
         if (data?.user) {
-          console.log("User created:", data.user);
-          console.log("Email confirmed at:", data.user.email_confirmed_at);
-          console.log("User ID:", data.user.id);
-          console.log("User email:", data.user.email);
+          console.log("User created successfully:", {
+            id: data.user.id,
+            email: data.user.email,
+            emailConfirmed: data.user.email_confirmed_at,
+          });
 
-          // Check if we're in development mode
-          if (process.env.NODE_ENV === "development") {
-            console.log(
-              "🚀 DEVELOPMENT MODE: Check Inbucket at http://localhost:54324 for the verification email"
-            );
-          }
-
-          // Always show verification screen for new signups
           setUserEmail(formData.email);
           setShowEmailVerification(true);
-
-          // Show success message
           console.log("Email verification screen shown for:", formData.email);
         } else {
           console.error("No user data returned from signup");
@@ -218,12 +198,11 @@ export default function Auth() {
         }
 
         if (data?.user) {
-          router.push("/"); // Redirect to homepage on successful login
+          router.push("/");
         }
       }
     } catch (error: unknown) {
       console.error("Auth error details:", error);
-      // Provide more detailed error messages
       let errorMessage =
         error instanceof Error ? error.message : "An error occurred";
 
@@ -245,21 +224,6 @@ export default function Auth() {
       ) {
         errorMessage =
           "An account with this email already exists. Please sign in instead.";
-      } else if (
-        error &&
-        typeof error === "object" &&
-        "status" in error &&
-        error.status === 500
-      ) {
-        errorMessage =
-          "Database error: Please ensure the database is properly set up with all required tables and triggers. Check the console for more details.";
-      } else if (
-        error instanceof Error &&
-        (error.message?.includes("Database error") ||
-          error.message?.includes("trigger"))
-      ) {
-        errorMessage =
-          "Database setup issue detected. Please run the complete database schema to fix missing tables.";
       }
 
       setAuthError(errorMessage);
@@ -283,7 +247,7 @@ export default function Auth() {
   // Email Verification Screen
   if (showEmailVerification) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br  p-4">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br p-4">
         <div className="w-full max-w-md space-y-8 rounded-2xl bg-gray-800/20 p-8 shadow-2xl backdrop-blur-sm border border-gray-700/50">
           {/* Header */}
           <div className="text-center space-y-4">
@@ -315,23 +279,6 @@ export default function Auth() {
                 Check your inbox and spam folder. The verification link will be
                 valid for 1 hour.
               </p>
-              {process.env.NODE_ENV === "development" && (
-                <div className="mt-3 p-2 bg-blue-900/20 border border-blue-800 rounded">
-                  <p className="text-blue-300 text-xs">
-                    🔧 <strong>Development Mode:</strong> Emails are captured by
-                    Inbucket.
-                    <br />
-                    <a
-                      href="http://localhost:54324"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-400 underline hover:text-blue-300"
-                    >
-                      Click here to check captured emails
-                    </a>
-                  </p>
-                </div>
-              )}
               <p className="text-xs text-gray-500">
                 💡 The button below opens Gmail, but you can use any email app
                 to check your {userEmail.split("@")[1]} email.
@@ -372,7 +319,7 @@ export default function Auth() {
               {isLoading ? "Sending..." : "Resend verification email"}
             </button>
 
-            {/* Error Message */}
+            {/* Error/Success Message */}
             {authError && (
               <div className="rounded-lg bg-red-900/20 p-4 border border-red-800">
                 <div className="flex">
