@@ -266,7 +266,9 @@ export default function Auth() {
                 />
               </svg>
             </div>
-            <h2 className="text-3xl font-bold text-white">Check Your Email</h2>
+            <h2 className="text-3xl font-bold text-white">
+              Check Your Email iloveu zeus
+            </h2>
             <p className="text-gray-300">
               We&apos;ve sent a verification link to
             </p>
@@ -439,7 +441,7 @@ export default function Auth() {
                 type="email"
                 required
                 className="block w-full rounded-lg border border-gray-600 bg-gray-700 px-4 py-3 pl-10 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 text-white transition-colors"
-                placeholder="e.g., coding@kirbycope.com or user@gmail.com"
+                placeholder="e.g., user@gmail.com"
                 value={formData.email}
                 onChange={handleInputChange}
               />
