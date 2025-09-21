@@ -57,28 +57,8 @@ export default function Auth() {
     try {
       setIsLoading(true);
 
-      // Always prioritize production domain for email verification links
-      let siteUrl = "https://dw.kirbycope.com"; // Default to production
-
-      // Only use environment variable if it's explicitly set and not localhost
-      if (
-        process.env.NEXT_PUBLIC_SITE_URL &&
-        !process.env.NEXT_PUBLIC_SITE_URL.includes("localhost") &&
-        !process.env.NEXT_PUBLIC_SITE_URL.includes("127.0.0.1")
-      ) {
-        siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-      } else if (typeof window !== "undefined") {
-        const currentOrigin = window.location.origin;
-        // Only use current origin if it's a known production domain
-        if (
-          currentOrigin.includes("vercel.app") ||
-          currentOrigin.includes("dw.kirbycope.com") ||
-          currentOrigin.includes("kirbycope.com")
-        ) {
-          siteUrl = currentOrigin;
-        }
-        // For localhost/development, still default to production for email links
-      }
+      // ALWAYS use production domain for email verification links
+      const siteUrl = "https://dw.kirbycope.com";
 
       console.log("Resending verification email with site URL:", siteUrl);
       console.log("Resending to email:", userEmail);
@@ -92,6 +72,10 @@ export default function Auth() {
       };
 
       console.log("Resend options:", resendOptions);
+      console.log(
+        "🔗 Resend email verification redirect URL:",
+        `${siteUrl}/auth/callback`
+      );
 
       const { error } = await supabase.auth.resend(resendOptions);
 
@@ -152,28 +136,8 @@ export default function Auth() {
 
     try {
       if (isSignUp) {
-        // Always prioritize production domain for email verification links
-        let siteUrl = "https://dw.kirbycope.com"; // Default to production
-
-        // Only use environment variable if it's explicitly set and not localhost
-        if (
-          process.env.NEXT_PUBLIC_SITE_URL &&
-          !process.env.NEXT_PUBLIC_SITE_URL.includes("localhost") &&
-          !process.env.NEXT_PUBLIC_SITE_URL.includes("127.0.0.1")
-        ) {
-          siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
-        } else if (typeof window !== "undefined") {
-          const currentOrigin = window.location.origin;
-          // Only use current origin if it's a known production domain
-          if (
-            currentOrigin.includes("vercel.app") ||
-            currentOrigin.includes("dw.kirbycope.com") ||
-            currentOrigin.includes("kirbycope.com")
-          ) {
-            siteUrl = currentOrigin;
-          }
-          // For localhost/development, still default to production for email links
-        }
+        // ALWAYS use production domain for email verification links
+        const siteUrl = "https://dw.kirbycope.com";
 
         console.log("Signup attempt with site URL:", siteUrl);
         console.log(
@@ -195,6 +159,10 @@ export default function Auth() {
         };
 
         console.log("Signup options:", signUpOptions);
+        console.log(
+          "🔗 Email verification redirect URL:",
+          `${siteUrl}/auth/callback`
+        );
 
         const { data, error } = await supabase.auth.signUp(signUpOptions);
 
