@@ -38,3 +38,15 @@ export interface PaymentRecord {
   created_at?: string;
   updated_at?: string;
 }
+
+export interface BillingSummary {
+  totalRecords: number;
+  totalPatients: number;
+  totalRevenue: number;
+  totalOutstanding: number;
+  serviceTypes: { [key: string]: number };
+  insuranceProviders: { [key: string]: number };
+  paymentStatusBreakdown: { [key: string]: number };
+  genderDistribution: { [key: string]: number };
+  monthlyRevenue: { [key: string]: number };
+}

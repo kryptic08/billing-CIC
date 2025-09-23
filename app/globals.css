@@ -227,3 +227,34 @@
   
   --radius: 0.5rem;
 }
+
+/* Global tooltip positioning improvements */
+.chart-container {
+  position: relative;
+  overflow: visible !important;
+}
+
+/* Ensure tooltips are always on top */
+[data-tooltip] {
+  position: fixed !important;
+  z-index: 9999 !important;
+  pointer-events: none !important;
+}
+
+/* Prevent chart containers from clipping tooltips */
+.grid {
+  overflow: visible;
+}
+
+.grid > * {
+  overflow: visible;
+}
+
+/* Chart tooltip specific fixes */
+.analytics-dashboard .grid {
+  overflow: visible !important;
+}
+
+.analytics-dashboard .grid > div {
+  overflow: visible !important;
+}

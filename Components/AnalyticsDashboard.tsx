@@ -139,7 +139,7 @@ export function AnalyticsDashboard() {
   }
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-8 analytics-dashboard">
       {/* Key Metrics Cards */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -258,67 +258,98 @@ export function AnalyticsDashboard() {
         </div>
       </motion.div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-        {/* Payment Status Distribution */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6"
-        >
-          <PieChart
-            data={analytics.paymentStatusData}
-            title="Payment Status Distribution"
-            size={200}
-          />
-        </motion.div>
+      {/* Charts Section with proper spacing for tooltips */}
+      <div className="space-y-8">
+        {/* Pie Charts Row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-8">
+          {/* Payment Status Distribution */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-8"
+            style={{
+              minHeight: "320px",
+              position: "relative",
+              isolation: "isolate",
+            }}
+          >
+            <div className="flex items-center justify-center h-full">
+              <PieChart
+                data={analytics.paymentStatusData}
+                title="Payment Status Distribution"
+                size={180}
+              />
+            </div>
+          </motion.div>
 
-        {/* Insurance Providers */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6"
-        >
-          <PieChart
-            data={analytics.insuranceProvidersData}
-            title="Insurance Providers"
-            size={200}
-          />
-        </motion.div>
+          {/* Insurance Providers */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-8"
+            style={{
+              minHeight: "320px",
+              position: "relative",
+              isolation: "isolate",
+            }}
+          >
+            <div className="flex items-center justify-center h-full">
+              <PieChart
+                data={analytics.insuranceProvidersData}
+                title="Insurance Providers"
+                size={180}
+              />
+            </div>
+          </motion.div>
 
-        {/* Gender Distribution */}
+          {/* Gender Distribution */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-8 lg:col-span-2 xl:col-span-1"
+            style={{
+              minHeight: "320px",
+              position: "relative",
+              isolation: "isolate",
+            }}
+          >
+            <div className="flex items-center justify-center h-full">
+              <PieChart
+                data={analytics.genderDistributionData}
+                title="Patient Gender Distribution"
+                size={180}
+              />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Monthly Revenue Chart */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6"
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-8"
+          style={{
+            minHeight: "400px",
+            position: "relative",
+            isolation: "isolate",
+          }}
         >
-          <PieChart
-            data={analytics.genderDistributionData}
-            title="Patient Gender Distribution"
-            size={200}
-          />
+          <div className="w-full h-full flex items-center justify-center">
+            <LineChart
+              data={analytics.monthlyRevenueData}
+              title="Monthly Revenue Trend"
+              width={800}
+              height={300}
+              color="#3B82F6"
+              showGrid={true}
+            />
+          </div>
         </motion.div>
       </div>
-
-      {/* Monthly Revenue Chart */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, delay: 0.4 }}
-        className="bg-gray-800/50 backdrop-blur-sm border border-gray-700/50 rounded-xl p-6"
-      >
-        <LineChart
-          data={analytics.monthlyRevenueData}
-          title="Monthly Revenue Trend"
-          width={800}
-          height={300}
-          color="#3B82F6"
-          showGrid={true}
-        />
-      </motion.div>
 
       {/* Recent Records Table */}
       <motion.div
