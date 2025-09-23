@@ -39,6 +39,27 @@ interface ChartError {
   suggestions: string[];
 }
 
+interface BillingRecord {
+  [key: string]: any;
+}
+
+interface Summary {
+  totalRecords: number;
+  totalPatients: number;
+  totalRevenue: number;
+  totalPaid: number;
+  totalOutstanding: number;
+  averageCharges: number;
+  averageCoverage: number;
+  oldestAdmissionDate: string | null;
+  latestAdmissionDate: string | null;
+  paymentStatusBreakdown: Record<string, number>;
+  insuranceProviders: Record<string, number>;
+  genderDistribution: Record<string, number>;
+  serviceTypes: Record<string, number>;
+  recentRecords: BillingRecord[];
+}
+
 // Chart detection keywords and patterns
 const CHART_KEYWORDS = [
   'create', 'creat', 'generate', 'show', 'display', 'visualize', 'plot', 'draw',
@@ -94,7 +115,7 @@ function detectChartIntent(message: string): boolean {
 }
 
 // Generate chart specification using AI
-async function generateChartSpecification(userQuery: string, billingDataSample: any[]): Promise<ChartSpecification> {
+async function generateChartSpecification(userQuery: string, billingDataSample: BillingRecord[]): Promise<ChartSpecification> {
   if (!genAI) {
     // Fallback to intelligent parsing if no AI available
     const fallbackResult = parseUserQueryFallback(userQuery);
@@ -198,15 +219,15 @@ Respond only with valid JSON, no additional text.`;
     // Parse the JSON response from Gemini
     const cleanedText = generatedText.replace(/```json\n?|\n?```/g, "").trim();
     return JSON.parse(cleanedText);
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Failed to generate chart with AI:", {
-      status: error?.status,
-      message: error?.message,
-      type: error?.name
+      status: (error as any)?.status,
+      message: (error as any)?.message,
+      type: (error as any)?.name
     });
     
     // If it's a rate limit error, provide helpful feedback
-    if (error?.status === 429) {
+    if ((error as any)?.status === 429) {
       console.warn('Rate limit hit, falling back to intelligent parsing');
     }
     
@@ -457,7 +478,7 @@ function parseUserQueryFallback(userQuery: string): ChartSpecification | ChartEr
   const topMatch = query.match(/top (\d+)/);
   const firstMatch = query.match(/first (\d+)/);
   const lastMatch = query.match(/last (\d+)/);
-  let limit = topMatch ? parseInt(topMatch[1]) : firstMatch ? parseInt(firstMatch[1]) : lastMatch ? parseInt(lastMatch[1]) : undefined;
+  const limit = topMatch ? parseInt(topMatch[1]) : firstMatch ? parseInt(firstMatch[1]) : lastMatch ? parseInt(lastMatch[1]) : undefined;
   
   // Generate appropriate title
   const fieldName = getNumericField(dataField)?.name || getCategoricalField(dataField)?.name || dataField;
@@ -521,22 +542,15 @@ function generateChartInsights(chartType: string, fieldName: string, categoryNam
 }
 
 // Handle chart generation requests
-async function handleChartRequest(message: string, billingData: any[], summary: any, chatHistory?: ChatMessage[]) {
+async function handleChartRequest(message: string, billingData: BillingRecord[], summary: Summary, chatHistory?: ChatMessage[]) {
   console.log('AI API: Processing chart request');
   
   try {
-    // Generate chart specification
-    const chartSpec = await generateChartSpecification(message, billingData);
-    
-    // Include chat history context for better AI understanding
-    const conversationHistory = chatHistory && chatHistory.length > 0 
-      ? `\n\nCONVERSATION HISTORY:\n${chatHistory.map((msg: ChatMessage) => `${msg.role.toUpperCase()}: ${msg.content}`).join('\n')}\n`
-      : '';
-
-    // Use the insights from the chart specification directly instead of making another API call
-    let chartExplanation = chartSpec.insights;
-    
-    // Only make an additional AI call if the insight is generic and we have API access
+  // Generate chart specification
+  const chartSpec = await generateChartSpecification(message, billingData);
+  
+  // Use the insights from the chart specification directly instead of making another API call
+  let chartExplanation = chartSpec.insights;    // Only make an additional AI call if the insight is generic and we have API access
     const isGenericInsight = chartSpec.insights.includes('based on your request') || 
                              chartSpec.insights.includes('This chart shows') ||
                              chartSpec.insights.length < 50;
@@ -635,7 +649,7 @@ Be concise and focus on what insights this chart provides for healthcare billing
 }
 
 // Handle normal chat requests
-async function handleChatRequest(message: string, billingData: any[], summary: any, chatHistory?: ChatMessage[]) {
+async function handleChatRequest(message: string, billingData: BillingRecord[], summary: Summary, chatHistory?: ChatMessage[]) {
   console.log('AI API: Processing normal chat request');
   
   // Prepare comprehensive context for AI with all billing data
@@ -921,7 +935,7 @@ What would you like to know about your billing data?`,
       return await handleChatRequest(message, billingData, summary, chatHistory);
     }
 
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('AI API error:', {
       message: error instanceof Error ? error.message : 'Unknown error',
       name: error instanceof Error ? error.name : 'Unknown',

@@ -9,6 +9,7 @@ import {
   Send,
   RotateCcw,
   Loader2,
+  BotMessageSquare,
 } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -27,6 +28,7 @@ import {
 import { BillingSummary } from "../lib/types";
 import { TextShimmer } from "./TextShimmer";
 import "../styles/chat.css";
+import Image from "next/image";
 
 interface ChatMessage {
   role: "user" | "assistant";
@@ -449,9 +451,9 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
 
   // Select 3 pre-made prompts that showcase both chat and chart capabilities
   const suggestionQuestions = [
-    "Show me a pie chart of service types",
+    "Create a pie chart of revenue by procedure",
     "What's our total revenue and patient count?",
-    "Create a bar chart of monthly trends",
+    "Create a line chart of monthly revenue trends",
   ];
 
   const handleSuggestionClick = (question: string) => {
@@ -733,8 +735,18 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
                         }}
                         className={`flex ${
                           msg.role === "user" ? "justify-end" : "justify-start"
-                        }`}
+                        } items-start space-x-3`}
                       >
+                        {msg.role === "assistant" && (
+                          <div className="flex flex-col items-center space-y-1">
+                            <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-b from-blue-500 via-blue-600 to-yellow-500 rounded-full flex items-center justify-center">
+                              <BotMessageSquare className="w-5 h-5 text-white" />
+                            </div>
+                            <span className="text-xs font-medium text-gray-400">
+                              ZeuSbot
+                            </span>
+                          </div>
+                        )}
                         <div
                           className={`max-w-[75%] p-3 rounded-xl shadow-md ${
                             msg.role === "user"
@@ -786,8 +798,18 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
                       <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="flex justify-start"
+                        className="flex justify-start items-start space-x-3"
                       >
+                        <div className="flex flex-col items-center space-y-1">
+                          <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                            <span className="text-white text-sm font-bold">
+                              AI
+                            </span>
+                          </div>
+                          <span className="text-xs font-medium text-gray-400">
+                            Kirby
+                          </span>
+                        </div>
                         <div className="bg-gray-800 rounded-2xl shadow-md p-4">
                           <div className="flex items-center space-x-3">
                             <Loader2 className="w-4 h-4 animate-spin text-blue-400" />
