@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { getBillingDataForAI } from '@/lib/billing-data-service';
+import { BillingRecord } from '@/lib/billing-analytics-real';
 
 interface ChatMessage {
   role: string;
@@ -39,8 +40,21 @@ interface ChartError {
   suggestions: string[];
 }
 
-interface BillingRecord {
-  [key: string]: any;
+interface Summary {
+  totalRecords: number;
+  totalPatients: number;
+  totalRevenue: number;
+  totalPaid: number;
+  totalOutstanding: number;
+  averageCharges: number;
+  averageCoverage: number;
+  oldestAdmissionDate: string | null;
+  latestAdmissionDate: string | null;
+  paymentStatusBreakdown: Record<string, number>;
+  insuranceProviders: Record<string, number>;
+  genderDistribution: Record<string, number>;
+  serviceTypes: Record<string, number>;
+  recentRecords: BillingRecord[];
 }
 
 interface Summary {
@@ -221,13 +235,13 @@ Respond only with valid JSON, no additional text.`;
     return JSON.parse(cleanedText);
   } catch (error: unknown) {
     console.error("Failed to generate chart with AI:", {
-      status: (error as any)?.status,
-      message: (error as any)?.message,
-      type: (error as any)?.name
+      status: typeof error === 'object' && error !== null && 'status' in error ? (error as { status?: number }).status : undefined,
+      message: error instanceof Error ? error.message : 'Unknown error',
+      type: error instanceof Error ? error.name : 'Unknown'
     });
     
     // If it's a rate limit error, provide helpful feedback
-    if ((error as any)?.status === 429) {
+    if (typeof error === 'object' && error !== null && 'status' in error && (error as { status?: number }).status === 429) {
       console.warn('Rate limit hit, falling back to intelligent parsing');
     }
     
@@ -559,6 +573,8 @@ async function handleChartRequest(message: string, billingData: BillingRecord[],
       try {
         console.log('AI API: Generating enhanced chart explanation...');
         
+        const totalRevenueFormatted = summary.totalRevenue.toLocaleString();
+        
         const enhancedPrompt = `Briefly explain this ${chartSpec.chartType} chart in 1-2 sentences:
         
 Title: ${chartSpec.title}
@@ -566,7 +582,7 @@ Data: ${chartSpec.dataField} (${chartSpec.aggregation})
 Grouping: ${chartSpec.filters?.category || 'Default grouping'}
 User Request: "${message}"
 
-Context: Healthcare billing system with ${summary.totalRecords} records, $${summary.totalRevenue.toLocaleString()} total revenue.
+Context: Healthcare billing system with ${summary.totalRecords} records, $${totalRevenueFormatted} total revenue.
 
 Be concise and focus on what insights this chart provides for healthcare billing analysis.`;
 
@@ -585,15 +601,15 @@ Be concise and focus on what insights this chart provides for healthcare billing
         if (aiExplanation && aiExplanation.trim().length > 10) {
           chartExplanation = aiExplanation.trim();
         }
-      } catch (explanationError: any) {
+      } catch (explanationError: unknown) {
         console.warn('Failed to generate enhanced chart explanation:', {
-          status: explanationError?.status,
-          message: explanationError?.message,
-          type: explanationError?.name
+          status: typeof explanationError === 'object' && explanationError !== null && 'status' in explanationError ? (explanationError as { status?: number }).status : undefined,
+          message: explanationError instanceof Error ? explanationError.message : 'Unknown error',
+          type: explanationError instanceof Error ? explanationError.name : 'Unknown'
         });
         
         // If it's a rate limit error, provide a better fallback
-        if (explanationError?.status === 429) {
+        if (typeof explanationError === 'object' && explanationError !== null && 'status' in explanationError && (explanationError as { status?: number }).status === 429) {
           chartExplanation = `This ${chartSpec.chartType} chart shows ${chartSpec.dataField.toLowerCase()} analysis. Due to high demand, I'm using a simplified explanation right now.`;
         }
       }
@@ -653,15 +669,20 @@ async function handleChatRequest(message: string, billingData: BillingRecord[], 
   console.log('AI API: Processing normal chat request');
   
   // Prepare comprehensive context for AI with all billing data
+  const totalRevenueFormatted = summary.totalRevenue.toLocaleString();
+  const totalPaidFormatted = summary.totalPaid.toLocaleString();
+  const totalOutstandingFormatted = summary.totalOutstanding.toLocaleString();
+  const averageChargesFormatted = summary.averageCharges.toLocaleString();
+  
   const dataContext = `HEALTHCARE BILLING SYSTEM DATA - COMPLETE DATASET
 
 SUMMARY STATISTICS:
 - Total Records: ${summary.totalRecords}
 - Total Unique Patients: ${summary.totalPatients}
-- Total Revenue: $${summary.totalRevenue.toLocaleString()}
-- Total Amount Paid: $${summary.totalPaid.toLocaleString()}
-- Total Outstanding: $${summary.totalOutstanding.toLocaleString()}
-- Average Charges per Record: $${summary.averageCharges.toLocaleString()}
+- Total Revenue: $${totalRevenueFormatted}
+- Total Amount Paid: $${totalPaidFormatted}
+- Total Outstanding: $${totalOutstandingFormatted}
+- Average Charges per Record: $${averageChargesFormatted}
 - Average Insurance Coverage: ${summary.averageCoverage}%
 - Date Range: ${summary.oldestAdmissionDate} to ${summary.latestAdmissionDate}
 
@@ -748,16 +769,16 @@ Current User Question: ${message}`;
         latestDate: summary.latestAdmissionDate
       }
     });
-  } catch (geminiError: any) {
+  } catch (geminiError: unknown) {
     console.error('Gemini API error:', {
       message: geminiError instanceof Error ? geminiError.message : 'Unknown error',
       name: geminiError instanceof Error ? geminiError.name : 'Unknown',
-      status: geminiError?.status,
+      status: typeof geminiError === 'object' && geminiError !== null && 'status' in geminiError ? (geminiError as { status?: number }).status : undefined,
       stack: geminiError instanceof Error ? geminiError.stack : undefined
     });
     
     // Provide specific error handling for rate limits
-    if (geminiError?.status === 429) {
+    if (typeof geminiError === 'object' && geminiError !== null && 'status' in geminiError && (geminiError as { status?: number }).status === 429) {
       return NextResponse.json({
         success: true,
         type: 'chat',

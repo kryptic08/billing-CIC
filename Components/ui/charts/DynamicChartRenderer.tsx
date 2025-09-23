@@ -36,7 +36,7 @@ export interface ChartSpecification {
 export interface DynamicChartProps {
   specification: ChartSpecification;
   rawData: Record<string, unknown>[];
-  onChartClick?: (data: any, index: number) => void;
+  onChartClick?: (data: unknown, index: number) => void;
 }
 
 // Color schemes for different chart types

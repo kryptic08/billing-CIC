@@ -267,7 +267,7 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
         `Creating AI-specified chart with ${billingData?.length || 0} records`
       );
 
-      const handleChartClick = (data: any, index: number) => {
+      const handleChartClick = (data: unknown, index: number) => {
         console.log("AI chart element clicked:", data, "at index:", index);
       };
 
@@ -480,7 +480,13 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
       <strong className="font-semibold text-white">{children}</strong>
     ),
     em: ({ children }) => <em className="italic text-gray-300">{children}</em>,
-    code: ({ children, ...props }: any) => {
+    code: ({
+      children,
+      ...props
+    }: {
+      children?: React.ReactNode;
+      className?: string;
+    }) => {
       const className = props.className;
       const isInline = !className;
       return isInline ? (
@@ -592,7 +598,7 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
                       </label>
                       <div className="flex items-center space-x-2 text-xs text-gray-500">
                         <span className="bg-blue-500/20 text-blue-300 px-2 py-1 rounded-full">
-                          💡 Tip: Type "create" for instant charts
+                          💡 Tip: Type &quot;create&quot; for instant charts
                         </span>
                       </div>
                     </div>
@@ -801,13 +807,11 @@ const TextInput: React.FC<TextInputProps> = ({ isOpen, onClose }) => {
                         className="flex justify-start items-start space-x-3"
                       >
                         <div className="flex flex-col items-center space-y-1">
-                          <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                            <span className="text-white text-sm font-bold">
-                              AI
-                            </span>
+                          <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-b from-blue-500 via-blue-600 to-yellow-500 rounded-full flex items-center justify-center">
+                            <BotMessageSquare className="w-5 h-5 text-white" />
                           </div>
                           <span className="text-xs font-medium text-gray-400">
-                            Kirby
+                            ZeuSbot
                           </span>
                         </div>
                         <div className="bg-gray-800 rounded-2xl shadow-md p-4">
