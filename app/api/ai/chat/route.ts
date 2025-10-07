@@ -676,6 +676,28 @@ async function handleChatRequest(message: string, billingData: BillingRecord[], 
   
   const dataContext = `HEALTHCARE BILLING SYSTEM DATA - COMPLETE DATASET
 
+DATABASE SCHEMA:
+Table: billing_and_insurance
+- PatientID (bigint, NOT NULL, PRIMARY KEY): Unique patient identifier
+- PatientName (text): Full name of the patient
+- DateOfBirth (text): Patient's date of birth
+- Gender (text): Patient gender (Male/Female)
+- Address (text): Patient's full address
+- PhoneNumber (text): Contact phone number
+- Email (text): Patient's email address
+- InsuranceProvider (text): Name of insurance company (e.g., Kaiser, Cigna, Blue Cross)
+- PolicyNumber (bigint): Insurance policy number
+- BillingNumber (text): Unique billing reference number
+- AdmissionDate (timestamp with time zone): Hospital admission date and time
+- DischargeDate (timestamp with time zone): Hospital discharge date and time
+- ServiceDescription (text): Description of medical service/procedure performed
+- TotalCharges (double precision): Total amount charged for the service
+- InsuranceCoveragePercentage (double precision): Percentage of charges covered by insurance (0-100)
+- AmountCoveredByInsurance (double precision): Dollar amount covered by insurance
+- AmountPaid (double precision): Amount actually paid by patient/insurance
+- RunningBalance (double precision): Outstanding balance remaining
+- PaymentStatus (text): Current payment status (Paid, Partially Paid, Unpaid)
+
 SUMMARY STATISTICS:
 - Total Records: ${summary.totalRecords}
 - Total Unique Patients: ${summary.totalPatients}
@@ -698,6 +720,32 @@ ${Object.entries(summary.genderDistribution).map(([gender, count]) => `- ${gende
 TOP SERVICE TYPES:
 ${Object.entries(summary.serviceTypes).slice(0, 10).map(([service, count]) => `- ${service}: ${count} records`).join('\n')}
 
+PATIENT DIRECTORY (PatientID -> PatientName):
+${billingData.map(record => `${record.PatientID}: ${record.PatientName}`).join('\n')}
+
+COMPLETE PATIENT RECORDS (ALL ${billingData.length} patients with full details):
+${billingData.map(record =>
+  `PATIENT_ID_${record.PatientID}:
+  Name: ${record.PatientName}
+  DOB: ${record.DateOfBirth || 'Not available'}
+  Gender: ${record.Gender || 'Not available'}
+  Phone: ${record.PhoneNumber || 'Not available'}
+  Email: ${record.Email || 'Not available'}
+  Address: ${record.Address || 'Not available'}
+  Insurance: ${record.InsuranceProvider || 'Not available'}
+  Policy: ${record.PolicyNumber || 'Not available'}
+  Billing_Number: ${record.BillingNumber || 'Not available'}
+  Admission: ${record.AdmissionDate || 'Not available'}
+  Discharge: ${record.DischargeDate || 'Not available'}
+  Service: ${record.ServiceDescription || 'Not available'}
+  Total_Charges: $${record.TotalCharges || 0}
+  Insurance_Coverage_Pct: ${record.InsuranceCoveragePercentage || 0}%
+  Insurance_Coverage_Amt: $${record.AmountCoveredByInsurance || 0}
+  Amount_Paid: $${record.AmountPaid || 0}
+  Running_Balance: $${record.RunningBalance || 0}
+  Payment_Status: ${record.PaymentStatus || 'Not available'}`
+).join('\n\n')}
+
 SAMPLE RECENT RECORDS (Top 5):
 ${JSON.stringify(summary.recentRecords.slice(0, 5), null, 2)}
 
@@ -710,7 +758,8 @@ You have access to ALL ${summary.totalRecords} records covering ${summary.totalP
 - Insurance claim patterns and coverage analysis
 - Outstanding payment management
 - Service type and billing code analysis
-- Seasonal or temporal patterns in healthcare utilization`;
+- Seasonal or temporal patterns in healthcare utilization
+- Specific patient information and billing details`;
 
   // Include chat history if available for better context
   const conversationHistory = chatHistory && chatHistory.length > 0 
@@ -724,8 +773,18 @@ You have access to ALL ${summary.totalRecords} records covering ${summary.totalP
 3. Provide insights about healthcare costs and insurance coverage
 4. Explain billing codes and medical procedures when relevant
 5. Help identify trends in healthcare spending
+6. Look up specific patient information by patient number or name - ALL patient data is available
+7. Provide detailed billing information for individual patients
 
-Please be professional, accurate, and helpful. If you don't have enough information to answer a question completely, let the user know what additional information would be helpful.
+CRITICAL: You have COMPLETE access to ALL ${summary.totalRecords} patient records with full demographic and billing details. When asked about any specific patient (like patient 301 or 302), you MUST search through the COMPLETE PATIENT RECORDS section and provide the actual information found there. Do NOT say information is "not available" or "not in sample data" - all patient records are provided in full detail.
+
+For patient lookups:
+- Search for "PATIENT_ID_{number}:" in the complete records
+- Extract all available information for that patient
+- Provide specific details like name, insurance, charges, payment status, etc.
+- If a field shows "Not available", that means the data wasn't recorded for that patient
+
+Please be professional, accurate, and helpful. Always use the complete patient records provided.
 
 ${dataContext}${conversationHistory}
 
