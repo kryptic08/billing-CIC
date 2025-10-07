@@ -215,7 +215,7 @@ Respond only with valid JSON, no additional text.`;
 
   try {
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash-lite",
       generationConfig: {
         temperature: 0.1,
         maxOutputTokens: 1024, // Reduced from default to save on quota
@@ -587,7 +587,7 @@ Context: Healthcare billing system with ${summary.totalRecords} records, $${tota
 Be concise and focus on what insights this chart provides for healthcare billing analysis.`;
 
         const model = genAI.getGenerativeModel({ 
-          model: "gemini-1.5-flash",
+          model: "gemini-2.5-flash-lite",
           generationConfig: {
             temperature: 0.3,
             maxOutputTokens: 150, // Limit tokens to reduce API usage
@@ -740,7 +740,7 @@ Current User Question: ${message}`;
     }
 
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-2.5-flash-lite",
       generationConfig: {
         temperature: 0.7,
         maxOutputTokens: 1024, // Limit tokens to manage quota
