@@ -778,6 +778,13 @@ You have access to ALL ${summary.totalRecords} records covering ${summary.totalP
 
 CRITICAL: You have COMPLETE access to ALL ${summary.totalRecords} patient records with full demographic and billing details. When asked about any specific patient (like patient 301 or 302), you MUST search through the COMPLETE PATIENT RECORDS section and provide the actual information found there. Do NOT say information is "not available" or "not in sample data" - all patient records are provided in full detail.
 
+DATASET UPDATE INFORMATION:
+The system has been updated with a new, comprehensive dataset.
+- Old Data: Previous dataset was limited in scope and size.
+- New Data: Current dataset contains ${summary.totalRecords} detailed records including patient demographics, insurance providers, service descriptions, and payment statuses.
+- Key Difference: The new data provides a more realistic and extensive view of healthcare billing operations, allowing for deeper analysis of trends, revenue, and patient demographics.
+- If asked about "old vs new data", explain that the current dataset is the "new" comprehensive set, replacing the previous limited version to provide better analytical capabilities.
+
 For patient lookups:
 - Search for "PATIENT_ID_{number}:" in the complete records
 - Extract all available information for that patient
